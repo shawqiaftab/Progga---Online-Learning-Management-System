@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Write Blog</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #ffffff;
+    }
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      padding: 0 30px;
+      height: 60px;
+      background: #adca9d;
+      color: #fff;
+      font-size: 18px;
+    }
+    .navbar a {
+      color: white;
+      margin-right: 20px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .logo img {
+      height: 100%;
+      width: auto;
+      object-fit: contain;
+    }
+    .logo {
+      height: 100%;
+      display: flex;
+      align-items: center;
+    }
+    .auth-links {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .auth-links a {
+      color: white;
+      font-weight: bold;
+      text-decoration: none;
+    }
+    .signup-btn {
+      padding: 8px 15px;
+      background: rgb(172, 82, 82);
+      color: #2e6d3f;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+
+    .editor-container {
+      width: 70%;
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #e5e5e5;
+    }
+
+    .page-header h1 {
+      color: #333;
+      font-size: 24px;
+      margin: 0;
+    }
+
+    .back-link {
+      color: #2e6d3f;
+      text-decoration: none;
+      font-weight: bold;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .form-group {
+      margin-bottom: 25px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #444;
+      font-size: 16px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    .form-group textarea {
+      width: 100%;
+      min-height: 300px;
+      padding: 15px;
+      font-size: 16px;
+      line-height: 1.6;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-sizing: border-box;
+      resize: vertical;
+    }
+
+    .meta-row {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .meta-group {
+      flex: 1;
+    }
+
+    .meta-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #444;
+      font-size: 14px;
+    }
+
+    .meta-group select,
+    .meta-group input {
+      width: 100%;
+      padding: 8px 10px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .btn-save {
+      background: #2e6d3f;
+      color: white;
+      padding: 10px 24px;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .btn-save:hover {
+      background: #1e522a;
+    }
+
+    .btn-draft {
+      background: #f0f0f0;
+      color: #333;
+      padding: 10px 24px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .btn-draft:hover {
+      background: #e0e0e0;
+    }
+
+    .publish-info {
+      background: #eef5ed;
+      border-left: 4px solid #2e6d3f;
+      padding: 12px;
+      border-radius: 0 6px 6 0;
+      font-size: 14px;
+      color: #555;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <div class="logo">
+      <img src="প্রজ্ঞা.png" alt="প্রজ্ঞা Logo">
+    </div>
+    <div style="margin-left: 30px;">
+      <a href="courses.html">Offered Courses</a>
+      <a href="discounts.html">Discounts</a>
+      <a href="mycourses.html">My courses</a>
+    </div>
+    <div class="auth-links">
+      <a href="login.html">Login</a>
+      <a href="signup.html" class="signup-btn">Sign Up</a>
+    </div>
+  </div>
+
+  <div class="editor-container">
+    <div class="page-header">
+      <h1>Write a New Blog Post</h1>
+      <a href="course1.html" class="back-link">← Back to Course</a>
+    </div>
+
+    <div class="form-group">
+      <label for="postTitle">Post Title *</label>
+      <input type="text" id="postTitle" placeholder="e.g. How I Built My First Portfolio Website">
+    </div>
+
+    <div class="meta-row">
+      <div class="meta-group">
+        <label for="postCategory">Category</label>
+        <select id="postCategory">
+          <option>Learning Journey</option>
+          <option>Course Tips</option>
+          <option>Project Showcase</option>
+          <option>Study Strategies</option>
+          <option>Web Development</option>
+          <option>Algorithms</option>
+        </select>
+      </div>
+      <div class="meta-group">
+        <label for="postVisibility">Visibility</label>
+        <select id="postVisibility">
+          <option>Public</option>
+          <option>Draft (Only you)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="postContent">Content *</label>
+      <textarea id="postContent" placeholder="Start writing your blog post here...&#10;&#10;Share what you learned, challenges you faced, or tips for other learners."></textarea>
+    </div>
+
+    <div class="publish-info">
+      💡 Posts are automatically saved as drafts. Click "Publish" when ready to share with the community!
+    </div>
+
+    <div class="action-buttons">
+      <button class="btn-draft">Save as Draft</button>
+      <button class="btn-save">Publish Post</button>
+    </div>
+  </div>
+
+  <script>
+    document.querySelector('.btn-save').addEventListener('click', function() {
+      const title = document.getElementById('postTitle').value;
+      if (!title.trim()) {
+        alert('Please enter a post title.');
+        return;
+      }
+      alert('Post published successfully!\nIt will appear in your blog and course community.');
+      // In real app: send to backend
+      // window.location.href = 'blog-dashboard.html';
+    });
+
+    document.querySelector('.btn-draft').addEventListener('click', function() {
+      alert('Draft saved!');
+      // In real app: save to backend as draft
+    });
+  </script>
+</body>
+</html>

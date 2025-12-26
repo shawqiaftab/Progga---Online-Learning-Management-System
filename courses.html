@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Page</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #ffffff;
+    }
+    /* Top bar */
+    .navbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 0 30px;
+  height: 60px;            /* <<< navbar height */
+  background: #adca9d;
+  color: #fff;
+  font-size: 18px;
+}
+    .navbar a {
+      color: white;
+      margin-right: 20px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .header-banner {
+  background: url('back1.png') no-repeat center center;
+  background-size: cover;  /* Makes image cover entire banner */
+  padding: 40px;
+  text-align: center;
+  border-bottom: 2px solid #e5e5e5;
+  color: black;            /* Make text visible over image */
+}
+
+
+    .featured-box {
+      margin: 40px auto;
+      width: 50%;
+      box-sizing: border-box;
+      padding: 0;
+      background: none;
+      border: none;
+      text-align: left;
+    }
+
+    /* New Search + Tabs Box */
+    .search-tabs-box {
+      width: 50%;            /* Same as main content */
+      margin: 40px auto;     /* Centered with top and bottom spacing */
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      background: #fafafa;
+      box-sizing: border-box;
+    }
+
+
+    .search-tabs-box input[type="text"] {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 16px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    .search-tabs {
+      display: flex;
+      background: #a6d1ff;
+      color: white;
+      font-weight: bold;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .search-tabs div {
+      flex: 1;
+      padding: 12px;
+      text-align: center;
+      cursor: pointer;
+      border-right: 1px solid #fff;
+    }
+
+    .search-tabs div:last-child {
+      border-right: none;
+    }
+
+    .main-content {
+      width: 50%;
+      margin: 40px auto;
+    }
+
+    .hero-section {
+      display: flex;
+      flex-direction: row;
+      width: 100%;
+      margin-top: 20px;
+    }
+    .sections a.card-link {
+  flex: 1;
+}
+
+    .hero-section img {
+      width: 50%;
+      height: auto;
+      border-radius: 8px;
+    }
+    /* Free Courses filter button */
+    .card-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  flex: 1;
+  min-width: 0;
+}
+
+
+
+.filter-btn {
+  background: #be723f;
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 15px;
+  cursor: pointer;
+}
+.auth-links {
+  margin-left: auto;      /* pushes to right */
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.auth-links a {
+  color: white;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.signup-btn {
+  padding: 8px 15px;
+  background: rgb(172, 82, 82);
+  color: #2e6d3f;       /* matches navbar palette */
+  border-radius: 6px;
+  font-weight: bold;
+}
+
+.filter-btn:hover {
+  background: #5b4ddb;
+}
+
+/* Dropdown for tags */
+.search-tags-dropdown {
+  flex: 1;
+  padding: 10px 12px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #a6d1ff;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+    .hero-text {
+      width: 50%;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 18px;
+      line-height: 1.7;
+    }
+ .logo img {
+  height: 100%;            /* <<< logo matches navbar height */
+  width: auto;
+  object-fit: contain;
+}
+
+.logo {
+  height: 100%;            /* same height as navbar */
+  display: flex;
+  align-items: center;
+}
+
+
+
+    .sections {
+      display: flex;
+      margin-top: 40px;
+      gap: 20px;
+    }
+
+    .card {
+      flex: 1;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #ddd;
+    }
+
+    .card img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+    }
+
+    .card p {
+      padding: 10px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+  <div class="logo">
+    <img src="প্রজ্ঞা.png" alt="প্রজ্ঞা Logo">
+  </div>
+
+  <div style="margin-left: 30px;">
+    <a href="courses.html">Offered Courses</a>
+    <a href="discounts.html">Discounts</a>
+    <a href="mycourses.html">My courses</a>
+  </div>
+    <div class="auth-links">
+    <a href="login.html">Login</a>
+    <a href="signup.html" class="signup-btn">Sign Up</a>
+  </div>
+</div>
+
+
+  <div class="header-banner">
+  </div>
+
+  <div class="featured-box">
+    <h2>Offered Courses by Problem Setters</h2>
+    <p>Find courses and resources to study and give exams in by filtering by area of focus, teaching method and more</p>
+    <p>Not finding your favorite resource in the database? Or, did you notice some outdated information? 
+  <a href="mailto:support@mahorobakotoba.com" style="color: #2e6d3f; text-decoration: underline; font-weight: bold;">Contact us 📩</a>
+</p>
+  </div>
+
+  <!-- New Search + Tabs Box -->
+<div class="search-tabs-box"> <!-- search button laagbe na. auto search as we write -->
+  <input type="text" placeholder="Search resources..." s/>
+
+  <div style="display: flex; gap: 10px; margin-top: 10px; align-items: center; flex-wrap: wrap;">
+  <!-- Free Courses button -->
+
+  <!-- Subject dropdown -->
+  <select class="search-tags-dropdown">
+    <option>All Subjects</option>
+    <option>Math</option>
+    <option>Algorithm</option>
+    <option>English</option>
+    <option>Machine Learning</option>
+    <option>Object Oriented Programming</option>
+  </select>
+
+  <!-- Difficulty dropdown -->
+  <select class="search-tags-dropdown">
+    <option>All Difficulties</option>
+    <option>Beginner</option>
+    <option>Intermediate</option>
+    <option>Advanced</option>
+  </select>
+</div>
+</div>
+
+
+  <div class="main-content"> <!-- new row er jonno new section -->
+    <div class="sections">
+      <!-- ekhane shob course add korbo -->
+  <a href="course1.html" class="card-link">
+  <div class="card">
+    <div class="card-title">Dummy title 1</div>
+    <img src="image" />
+    <div class="card-tags">
+      <div>Dummy description</div>
+    </div>
+  </div>
+</a>
+
+
+  <a href="course2.html" class="card-link">
+  <div class="card">
+    <div class="card-title">Dummy title 1</div>
+    <img src="image" />
+    <div class="card-tags">
+      <div>Dummy description</div>
+    </div>
+  </div>
+</a>
+  <a href="course3.html" class="card-link">
+  <div class="card">
+    <div class="card-title">Dummy title 1</div>
+    <img src="image" />
+    <div class="card-tags">
+      <div>Dummy description</div>
+    </div>
+  </div>
+</a>
+  <!-- aitar upore jotokichu ase shob course -->
+</div>
+<div class="sections">
+      <!-- ekhane shob course add korbo -->
+  <a href="course4.html" class="card-link">
+  <div class="card">
+    <div class="card-title">Dummy title 1</div>
+    <img src="image" />
+    <div class="card-tags">
+      <div>Dummy description</div>
+    </div>
+  </div>
+</a>
+
+
+  <a href="course5.html" class="card-link">
+  <div class="card">
+    <div class="card-title">Dummy title 1</div>
+    <img src="image" />
+    <div class="card-tags">
+      <div>Dummy description</div>
+    </div>
+  </div>
+</a>
+  <a href="course6.html" class="card-link">
+  <div class="card">
+    <div class="card-title">Dummy title 1</div>
+    <img src="image" />
+    <div class="card-tags">
+      <div>Dummy description</div>
+    </div>
+  </div>
+</a>
+  <!-- aitar upore jotokichu ase shob course -->
+</div>
+
+  </div>
+</body>
+</html>

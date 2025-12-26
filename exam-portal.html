@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Exam Portal</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #ffffff;
+    }
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      padding: 0 30px;
+      height: 60px;
+      background: #adca9d;
+      color: #fff;
+      font-size: 18px;
+    }
+    .navbar a {
+      color: white;
+      margin-right: 20px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .logo img {
+      height: 100%;
+      width: auto;
+      object-fit: contain;
+    }
+    .logo {
+      height: 100%;
+      display: flex;
+      align-items: center;
+    }
+    .auth-links {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .auth-links a {
+      color: white;
+      font-weight: bold;
+      text-decoration: none;
+    }
+    .signup-btn {
+      padding: 8px 15px;
+      background: rgb(172, 82, 82);
+      color: #2e6d3f;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+
+    .exam-container {
+      width: 70%;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .intro-screen, .exam-screen {
+      background: #fafafa;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 40px;
+      text-align: center;
+    }
+
+    .exam-screen {
+      display: none; /* Hidden by default */
+    }
+
+    .intro-screen h1 {
+      font-size: 28px;
+      color: #333;
+      margin: 0 0 20px;
+    }
+
+    .exam-details {
+      margin: 25px 0;
+      font-size: 16px;
+      line-height: 1.6;
+      color: #555;
+    }
+
+    .detail-item {
+      margin: 12px 0;
+    }
+
+    .detail-label {
+      font-weight: bold;
+      color: #2e6d3f;
+    }
+
+    .instructions {
+      background: #eef5ed;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 25px 0;
+      text-align: left;
+    }
+
+    .instructions h2 {
+      margin: 0 0 15px;
+      color: #2e6d3f;
+      font-size: 18px;
+    }
+
+    .instructions ul {
+      margin: 0;
+      padding-left: 20px;
+      color: #555;
+    }
+
+    .start-btn {
+      padding: 14px 32px;
+      background: #2e6d3f;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+
+    .start-btn:hover {
+      background: #1e522a;
+    }
+
+    .back-link {
+      display: block;
+      margin-top: 20px;
+      color: #2e6d3f;
+      text-decoration: underline;
+      font-weight: bold;
+    }
+
+    /* Exam Screen Styles (hidden until started) */
+    .exam-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #e5e5e5;
+    }
+
+    .question-card {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 30px;
+    }
+
+    .question-text {
+      font-size: 18px;
+      line-height: 1.5;
+      margin-bottom: 25px;
+      color: #333;
+    }
+
+    .choices-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .choice-label {
+      display: flex;
+      align-items: center;
+      padding: 14px;
+      background: #fafafa;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .choice-input {
+      margin-right: 15px;
+      transform: scale(1.2);
+    }
+
+    .nav-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+
+    .nav-btn {
+      padding: 10px 24px;
+      background: #2e6d3f;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .btn-prev {
+      background: #f0f0f0;
+      color: #333;
+    }
+
+    .btn-prev:hover {
+      background: #e0e0e0;
+    }
+
+    .timer {
+      background: #f8d7da;
+      color: #a03030;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <div class="logo">
+      <img src="প্রজ্ঞা.png" alt="প্রজ্ঞা Logo">
+    </div>
+    <div style="margin-left: 30px;">
+      <a href="courses.html">Offered Courses</a>
+      <a href="discounts.html">Discounts</a>
+      <a href="student-dashboard.html">My Dashboard</a>
+    </div>
+    <div class="auth-links">
+      <a href="login.html">Login</a>
+      <a href="signup.html" class="signup-btn">Sign Up</a>
+    </div>
+  </div>
+
+  <div class="exam-container">
+    <!-- Intro Screen (Shown First) -->
+    <div class="intro-screen" id="introScreen">
+      <h1>HTML & CSS Fundamentals — Final Exam</h1>
+      
+      <div class="exam-details">
+        <div class="detail-item">
+          <span class="detail-label">Total Questions:</span> 25
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Time Limit:</span> 30 minutes
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Passing Score:</span> 70%
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Attempts Allowed:</span> 2
+        </div>
+      </div>
+
+      <div class="instructions">
+        <h2>Exam Instructions</h2>
+        <ul>
+          <li>Read each question carefully before answering</li>
+          <li>You can navigate between questions using "Previous" and "Next"</li>
+          <li>The timer will start as soon as you click "Start Exam"</li>
+          <li>Your answers are saved automatically</li>
+          <li>Good luck!</li>
+        </ul>
+      </div>
+
+      <button class="start-btn" id="startExamBtn">Start Exam</button>
+      <a href="review-course.html" class="back-link">← Back to Course</a>
+    </div>
+
+    <!-- Exam Screen (Hidden Until Started) -->
+    <div class="exam-screen" id="examScreen">
+      <div class="exam-header">
+        <div>
+          <div>Question 1 of 25</div>
+        </div>
+        <div class="timer">30:00</div>
+      </div>
+
+      <div class="question-card">
+        <div class="question-text">
+          Which HTML tag is used to define an internal stylesheet?
+        </div>
+        <div class="choices-container">
+          <label class="choice-label">
+            <input type="radio" name="answer" value="A" class="choice-input">
+            A) &lt;style&gt;
+          </label>
+          <label class="choice-label">
+            <input type="radio" name="answer" value="B" class="choice-input">
+            B) &lt;css&gt;
+          </label>
+          <label class="choice-label">
+            <input type="radio" name="answer" value="C" class="choice-input">
+            C) &lt;script&gt;
+          </label>
+          <label class="choice-label">
+            <input type="radio" name="answer" value="D" class="choice-input">
+            D) &lt;link&gt;
+          </label>
+        </div>
+      </div>
+
+      <div class="nav-buttons">
+        <button class="nav-btn btn-prev" disabled>Previous</button>
+        <button class="nav-btn">Next Question</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('startExamBtn').addEventListener('click', function() {
+      // Hide intro, show exam
+      document.getElementById('introScreen').style.display = 'none';
+      document.getElementById('examScreen').style.display = 'block';
+      
+      // Start timer (optional)
+      let timeLeft = 30 * 60; // 30 minutes
+      const timerElement = document.querySelector('.timer');
+      
+      const timerInterval = setInterval(() => {
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          alert('Time is up! Submitting your exam...');
+          // In real app: auto-submit
+          return;
+        }
+        
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        timeLeft--;
+      }, 1000);
+    });
+
+    // Choice selection feedback
+    document.querySelectorAll('.choice-label').forEach(label => {
+      label.addEventListener('click', function() {
+        this.style.borderColor = '#2e6d3f';
+        this.style.backgroundColor = '#eef5ed';
+        
+        document.querySelectorAll('.choice-label').forEach(l => {
+          if (l !== this) {
+            l.style.borderColor = '#e0e0e0';
+            l.style.backgroundColor = '#fafafa';
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

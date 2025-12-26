@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Enrollments</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #ffffff;
+    }
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      padding: 0 30px;
+      height: 60px;
+      background: #adca9d;
+      color: #fff;
+      font-size: 18px;
+    }
+    .navbar a {
+      color: white;
+      margin-right: 20px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .logo img {
+      height: 100%;
+      width: auto;
+      object-fit: contain;
+    }
+    .logo {
+      height: 100%;
+      display: flex;
+      align-items: center;
+    }
+    .auth-links {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .auth-links a {
+      color: white;
+      font-weight: bold;
+      text-decoration: none;
+    }
+    .signup-btn {
+      padding: 8px 15px;
+      background: rgb(172, 82, 82);
+      color: #2e6d3f;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+
+    .students-container {
+      width: 80%;
+      max-width: 1000px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #e5e5e5;
+    }
+
+    .page-header h1 {
+      color: #333;
+      font-size: 24px;
+    }
+
+    .back-link {
+      color: #2e6d3f;
+      text-decoration: none;
+      font-weight: bold;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .course-selector {
+      margin-bottom: 25px;
+    }
+
+    .course-selector label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #444;
+    }
+
+    .course-selector select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+
+    .students-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .student-card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 16px;
+      background: #fafafa;
+      transition: box-shadow 0.2s;
+    }
+
+    .student-card:hover {
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .student-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .student-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #adca9d;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      margin-right: 12px;
+    }
+
+    .student-info h3 {
+      margin: 0 0 4px;
+      font-size: 16px;
+      color: #333;
+    }
+
+    .student-info p {
+      margin: 0;
+      font-size: 14px;
+      color: #666;
+    }
+
+    .progress-bar {
+      height: 6px;
+      background: #e0e0e0;
+      border-radius: 3px;
+      margin: 12px 0;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: #2e6d3f;
+    }
+
+    .progress-text {
+      font-size: 13px;
+      color: #555;
+      margin-bottom: 12px;
+    }
+
+    .student-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 6px 10px;
+      font-size: 13px;
+      text-align: center;
+      background: #e0e0e0;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .action-btn.message {
+      background: #d4e8d0;
+      color: #2e6d3f;
+    }
+
+    .action-btn.message:hover {
+      background: #c0dcb8;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #777;
+      border: 1px dashed #ddd;
+      border-radius: 8px;
+      grid-column: 1 / -1;
+    }
+
+    /* Messaging Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: white;
+      width: 90%;
+      max-width: 500px;
+      border-radius: 8px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      transform: translateY(-20px);
+      transition: transform 0.3s;
+    }
+
+    .modal-overlay.active .modal {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      padding: 20px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      color: #333;
+      font-size: 18px;
+    }
+
+    .close-modal {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #999;
+    }
+
+    .modal-body {
+      padding: 20px;
+    }
+
+    .modal-body p {
+      margin: 0 0 15px;
+      color: #555;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: bold;
+      color: #444;
+    }
+
+    .form-group textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  min-height: 100px;
+  font-family: Arial, sans-serif;
+  resize: vertical;
+  box-sizing: border-box; /* 👈 THIS FIXES THE OVERFLOW */
+}
+
+    .modal-footer {
+      padding: 0 20px 20px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-send {
+      flex: 1;
+      padding: 10px;
+      background: #2e6d3f;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .btn-cancel {
+      flex: 1;
+      padding: 10px;
+      background: #f0f0f0;
+      color: #333;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .btn-send:hover {
+      background: #1e522a;
+    }
+
+    .btn-cancel:hover {
+      background: #e0e0e0;
+    }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <div class="logo">
+      <img src="প্রজ্ঞা.png" alt="প্রজ্ঞা Logo">
+    </div>
+    <div style="margin-left: 30px;">
+      <a href="courses.html">Offered Courses</a>
+      <a href="discounts.html">Discounts</a>
+      <a href="mycourses.html">My courses</a>
+    </div>
+    <div class="auth-links">
+      <a href="login.html">Login</a>
+      <a href="signup.html" class="signup-btn">Sign Up</a>
+    </div>
+  </div>
+
+  <div class="students-container">
+    <div class="page-header">
+      <h1>Student Enrollments</h1>
+      <a href="teacher-dashboard.html" class="back-link">← Back to Dashboard</a>
+    </div>
+
+    <div class="course-selector">
+      <label for="course">Select Course</label>
+      <select id="course">
+        <option>Web Development Bootcamp</option>
+        <option>Data Structures & Algorithms</option>
+        <option>Machine Learning Fundamentals</option>
+      </select>
+    </div>
+
+    <div class="students-grid">
+      <!-- Student 1 -->
+      <div class="student-card">
+        <div class="student-header">
+          <div class="student-avatar">AR</div>
+          <div class="student-info">
+            <h3>Ahmed Rahman</h3>
+            <p>ahmed.rahman@example.com</p>
+          </div>
+        </div>
+        <div class="progress-text">Progress: 65% (13/20 lessons)</div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 65%"></div>
+        </div>
+        <div class="student-actions">
+          <button class="action-btn message" data-student="Ahmed Rahman" data-course="Web Development Bootcamp">Message</button>
+        </div>
+      </div>
+
+      <!-- Student 2 -->
+      <div class="student-card">
+        <div class="student-header">
+          <div class="student-avatar">FS</div>
+          <div class="student-info">
+            <h3>Faria Sultana</h3>
+            <p>faria.s@example.com</p>
+          </div>
+        </div>
+        <div class="progress-text">Progress: 100% (Completed)</div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 100%"></div>
+        </div>
+        <div class="student-actions">
+          <button class="action-btn message" data-student="Faria Sultana" data-course="Data Structures & Algorithms">Message</button>
+        </div>
+      </div>
+
+      <!-- Student 3 -->
+      <div class="student-card">
+        <div class="student-header">
+          <div class="student-avatar">ZR</div>
+          <div class="student-info">
+            <h3>Zara Rahman</h3>
+            <p>zara.r@example.com</p>
+          </div>
+        </div>
+        <div class="progress-text">Progress: 30% (6/20 lessons)</div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 30%"></div>
+        </div>
+        <div class="student-actions">
+          <button class="action-btn message" data-student="Zara Rahman" data-course="Web Development Bootcamp">Message</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Messaging Modal -->
+  <div class="modal-overlay" id="messageModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Send Message to <span id="modalStudentName">Student</span></h2>
+        <button class="close-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Course: <strong id="modalCourseName">Course Name</strong></p>
+        <div class="form-group">
+          <label for="messageText">Your Message</label>
+          <textarea id="messageText" placeholder="Type your message here..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel">Cancel</button>
+        <button class="btn-send">Send Message</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const modal = document.getElementById('messageModal');
+    const studentNameSpan = document.getElementById('modalStudentName');
+    const courseNameSpan = document.getElementById('modalCourseName');
+    const messageTextarea = document.getElementById('messageText');
+    const closeButtons = document.querySelectorAll('.close-modal, .btn-cancel');
+    const sendButton = document.querySelector('.btn-send');
+
+    // Open modal
+    document.querySelectorAll('.action-btn.message').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const student = this.getAttribute('data-student');
+        const course = this.getAttribute('data-course');
+        
+        studentNameSpan.textContent = student;
+        courseNameSpan.textContent = course;
+        messageTextarea.value = '';
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden'; // Prevent background scroll
+      });
+    });
+
+    // Close modal
+    closeButtons.forEach(btn => {
+      btn.addEventListener('click', function() {
+        modal.classList.remove('active');
+        document.body.style.overflow = ''; // Restore scroll
+      });
+    });
+
+    // Close on outside click
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    });
+
+    // Send message
+    sendButton.addEventListener('click', function() {
+      const message = messageTextarea.value.trim();
+      const student = studentNameSpan.textContent;
+      
+      if (message) {
+        alert(`Message sent to ${student}!\n\n"${message}"`);
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+        // In real app: send to backend via fetch()
+      } else {
+        alert('Please enter a message');
+      }
+    });
+  </script>
+</body>
+</html>

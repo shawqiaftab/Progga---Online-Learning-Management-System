@@ -1,0 +1,324 @@
+<!-- Review Form Component -->
+<!-- Add this to your course.php or course detail pages -->
+
+<style>
+.review-section {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #fafafa;
+}
+
+.review-section h3 {
+    margin: 0 0 20px;
+    color: #333;
+}
+
+.rating-input {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    align-items: center;
+}
+
+.star-rating {
+    display: flex;
+    gap: 5px;
+}
+
+.star {
+    font-size: 32px;
+    cursor: pointer;
+    color: #ddd;
+    transition: color 0.2s;
+}
+
+.star.active,
+.star:hover {
+    color: #FFD700;
+}
+
+.review-textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    font-family: inherit;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+.review-textarea:focus {
+    outline: none;
+    border-color: #adca9d;
+}
+
+.submit-review-btn {
+    padding: 10px 24px;
+    background: #2e6d3f;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.submit-review-btn:hover {
+    background: #1e522a;
+    transform: translateY(-2px);
+}
+
+.submit-review-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.review-message {
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 14px;
+    text-align: center;
+}
+
+.review-message.success {
+    background: #d4e8d0;
+    color: #2e6d3f;
+}
+
+.review-message.error {
+    background: #f8d7da;
+    color: #a03030;
+}
+
+.existing-reviews {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+}
+
+.existing-reviews h3 {
+    margin: 0 0 20px;
+    color: #333;
+}
+
+.review-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    background: white;
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.reviewer-name {
+    font-weight: bold;
+    color: #333;
+}
+
+.review-rating {
+    color: #FFD700;
+}
+
+.review-comment {
+    color: #555;
+    line-height: 1.6;
+}
+</style>
+
+<div class="review-section" id="reviewSection">
+    <h3>Write a Review</h3>
+
+    <div class="rating-input">
+        <span>Your Rating:</span>
+        <div class="star-rating" id="starRating">
+            <span class="star" data-rating="1">★</span>
+            <span class="star" data-rating="2">★</span>
+            <span class="star" data-rating="3">★</span>
+            <span class="star" data-rating="4">★</span>
+            <span class="star" data-rating="5">★</span>
+        </div>
+        <span id="ratingValue">0</span>
+    </div>
+
+    <textarea 
+        id="reviewComment" 
+        class="review-textarea" 
+        placeholder="Share your experience with this course...&#10;&#10;What did you learn? Would you recommend it to others?"
+        maxlength="500"
+    ></textarea>
+
+    <button id="submitReviewBtn" class="submit-review-btn">Submit Review</button>
+
+    <div id="reviewMessage" class="review-message" style="display: none;"></div>
+</div>
+
+<div class="existing-reviews">
+    <h3>Student Reviews</h3>
+    <div id="reviewsList">Loading reviews...</div>
+</div>
+
+<script>
+(function() {
+    const BASE = '/proj';
+    let selectedRating = 0;
+    const courseId = getCourseIdFromURL(); // You need to implement this based on your URL structure
+
+    // Star rating interaction
+    const stars = document.querySelectorAll('.star');
+    const ratingValue = document.getElementById('ratingValue');
+
+    stars.forEach(star => {
+        star.addEventListener('click', function() {
+            selectedRating = parseInt(this.getAttribute('data-rating'));
+            ratingValue.textContent = selectedRating;
+            updateStars(selectedRating);
+        });
+
+        star.addEventListener('mouseenter', function() {
+            const hoverRating = parseInt(this.getAttribute('data-rating'));
+            updateStars(hoverRating);
+        });
+    });
+
+    document.getElementById('starRating').addEventListener('mouseleave', function() {
+        updateStars(selectedRating);
+    });
+
+    function updateStars(rating) {
+        stars.forEach((star, index) => {
+            if (index < rating) {
+                star.classList.add('active');
+            } else {
+                star.classList.remove('active');
+            }
+        });
+    }
+
+    // Submit review
+    document.getElementById('submitReviewBtn').addEventListener('click', async function() {
+        const comment = document.getElementById('reviewComment').value.trim();
+        const messageEl = document.getElementById('reviewMessage');
+        const submitBtn = this;
+
+        if (selectedRating === 0) {
+            showMessage('Please select a rating', 'error');
+            return;
+        }
+
+        if (!comment) {
+            showMessage('Please write a comment', 'error');
+            return;
+        }
+
+        try {
+            submitBtn.disabled = true;
+            showMessage('Submitting review...', 'success');
+
+            const response = await fetch(`${BASE}/api/reviews/submit.php`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    courseId: courseId,
+                    rating: selectedRating,
+                    comment: comment
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.ok) {
+                throw new Error(data.error || 'Failed to submit review');
+            }
+
+            showMessage(data.message || 'Review submitted successfully!', 'success');
+            document.getElementById('reviewComment').value = '';
+            selectedRating = 0;
+            updateStars(0);
+            ratingValue.textContent = '0';
+
+            // Reload reviews
+            setTimeout(() => loadReviews(), 1000);
+
+        } catch (error) {
+            showMessage(error.message, 'error');
+        } finally {
+            submitBtn.disabled = false;
+        }
+    });
+
+    function showMessage(text, type) {
+        const messageEl = document.getElementById('reviewMessage');
+        messageEl.textContent = text;
+        messageEl.className = `review-message ${type}`;
+        messageEl.style.display = 'block';
+
+        if (type === 'success') {
+            setTimeout(() => {
+                messageEl.style.display = 'none';
+            }, 5000);
+        }
+    }
+
+    // Load existing reviews
+    async function loadReviews() {
+        const reviewsList = document.getElementById('reviewsList');
+
+        try {
+            const response = await fetch(`${BASE}/api/reviews/by-course.php?courseId=${courseId}`, {
+                credentials: 'include'
+            });
+            const data = await response.json();
+
+            if (!data.ok || !data.reviews || data.reviews.length === 0) {
+                reviewsList.innerHTML = '<p style="color: #777; text-align: center;">No reviews yet. Be the first to review!</p>';
+                return;
+            }
+
+            reviewsList.innerHTML = data.reviews.map(review => `
+                <div class="review-card">
+                    <div class="review-header">
+                        <span class="reviewer-name">${escapeHtml(review.name || 'Anonymous')}</span>
+                        <span class="review-rating">${'★'.repeat(review.rating)}${'☆'.repeat(5 - review.rating)}</span>
+                    </div>
+                    <p class="review-comment">${escapeHtml(review.comment)}</p>
+                </div>
+            `).join('');
+
+        } catch (error) {
+            reviewsList.innerHTML = '<p style="color: #a03030;">Failed to load reviews</p>';
+        }
+    }
+
+    function getCourseIdFromURL() {
+        const params = new URLSearchParams(window.location.search);
+        return parseInt(params.get('id') || params.get('courseId') || '0');
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Load reviews on page load
+    if (courseId) {
+        loadReviews();
+    } else {
+        document.getElementById('reviewSection').innerHTML = '<p style="color: #a03030;">Invalid course</p>';
+    }
+})();
+</script>

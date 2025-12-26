@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Edit Course</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #ffffff;
+    }
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      padding: 0 30px;
+      height: 60px;
+      background: #adca9d;
+      color: #fff;
+      font-size: 18px;
+    }
+    .navbar a {
+      color: white;
+      margin-right: 20px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .logo img {
+      height: 100%;
+      width: auto;
+      object-fit: contain;
+    }
+    .logo {
+      height: 100%;
+      display: flex;
+      align-items: center;
+    }
+    .auth-links {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .auth-links a {
+      color: white;
+      font-weight: bold;
+      text-decoration: none;
+    }
+    .signup-btn {
+      padding: 8px 15px;
+      background: rgb(172, 82, 82);
+      color: #2e6d3f;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+
+    .edit-container {
+      width: 600px;
+      max-width: 90%;
+      margin: 40px auto;
+      padding: 30px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: #fafafa;
+    }
+
+    .edit-container h1 {
+      text-align: center;
+      margin-bottom: 25px;
+      color: #333;
+      font-size: 24px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #444;
+      font-size: 14px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    .form-group textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 15px;
+    }
+
+    .form-row .form-group {
+      flex: 1;
+    }
+
+    .difficulty-options {
+      display: flex;
+      gap: 12px;
+      margin-top: 6px;
+    }
+
+    .difficulty-btn {
+      padding: 8px 16px;
+      background: #e0e0e0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .difficulty-btn.active {
+      border-color: #2e6d3f;
+      background: #eef5ed;
+      color: #2e6d3f;
+    }
+
+    .price-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 24px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: #2e6d3f;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 30px;
+    }
+
+    .btn-save {
+      flex: 1;
+      padding: 12px;
+      background: #2e6d3f;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .btn-cancel {
+      flex: 1;
+      padding: 12px;
+      background: #f0f0f0;
+      color: #333;
+      font-size: 16px;
+      font-weight: bold;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .btn-save:hover {
+      background: #1e522a;
+    }
+
+    .btn-cancel:hover {
+      background: #e0e0e0;
+    }
+
+    .course-image-preview {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      border-radius: 4px;
+      margin-bottom: 10px;
+    }
+
+    .image-upload-info {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <div class="logo">
+      <img src="প্রজ্ঞা.png" alt="প্রজ্ঞা Logo">
+    </div>
+    <div style="margin-left: 30px;">
+      <a href="courses.html">Offered Courses</a>
+      <a href="discounts.html">Discounts</a>
+      <a href="mycourses.html">My courses</a>
+      <a href="settings.html">Settings</a>
+    </div>
+    <div class="auth-links">
+      <div style="width: 36px; height: 36px; border-radius: 50%; background: #2e6d3f; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; margin-right: 10px;">
+        A
+      </div>
+      <a href="login.html" style="background: #f8d7da; color: #a03030; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 14px;">Logout</a>
+    </div>
+  </div>
+
+  <div class="edit-container">
+    <h1>Edit Course</h1>
+    
+    <form id="editCourseForm">
+      <!-- Course Thumbnail Preview -->
+      <div class="form-group">
+        <label>Current Thumbnail</label>
+        <img src="https://via.placeholder.com/600x400/e0e0e0/000000?text=Web+Dev+Bootcamp" alt="Course Thumbnail" class="course-image-preview">
+        <div class="image-upload-info">Recommended: 600x400px JPG/PNG</div>
+        <input type="file" id="thumbnail" name="thumbnail" accept="image/*" style="margin-top: 8px;">
+      </div>
+
+      <div class="form-group">
+        <label for="title">Course Title *</label>
+        <input type="text" id="title" name="title" value="Web Development Bootcamp" required>
+      </div>
+
+      <div class="form-group">
+        <label for="category">Category *</label>
+        <select id="category" name="category" required>
+          <option>Web Development</option>
+          <option>Math</option>
+          <option>Algorithm</option>
+          <option>English</option>
+          <option>Machine Learning</option>
+          <option>Object Oriented Programming</option>
+          <option>Data Science</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Description *</label>
+        <textarea name="description" required>This course takes you from beginner to confident web developer. You'll learn modern HTML5, CSS3, and JavaScript through hands-on projects. By the end, you'll build a responsive portfolio website, a task manager app, and deploy real sites using GitHub Pages.</textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Difficulty Level *</label>
+        <div class="difficulty-options">
+          <div class="difficulty-btn" data-level="beginner">Beginner</div>
+          <div class="difficulty-btn active" data-level="intermediate">Intermediate</div>
+          <div class="difficulty-btn" data-level="advanced">Advanced</div>
+        </div>
+        <input type="hidden" id="difficulty" name="difficulty" value="intermediate">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Total Lessons *</label>
+          <input type="number" name="lessons" min="1" value="24" required>
+        </div>
+        <div class="form-group">
+          <label>Duration (Hours)</label>
+          <input type="number" name="duration" min="1" step="0.5" value="40">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Price Settings</label>
+        <div class="price-toggle">
+          <span>Free Course</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="freeToggle">
+            <span class="slider"></span>
+          </label>
+          <span>Paid Course</span>
+        </div>
+        <div id="priceInput" style="margin-top: 10px;">
+          <input type="number" name="price" min="0" step="10" value="1490" placeholder="Price in BDT">
+        </div>
+      </div>
+
+      <div class="action-buttons">
+        <button type="submit" class="btn-save">Save Changes</button>
+        <button type="button" class="btn-cancel" onclick="window.history.back()">Cancel</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // Set Intermediate as active by default
+    document.querySelector('.difficulty-btn[data-level="intermediate"]').classList.add('active');
+
+    // Difficulty selection
+    document.querySelectorAll('.difficulty-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.difficulty-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        document.getElementById('difficulty').value = this.getAttribute('data-level');
+      });
+    });
+
+    // Free/Paid toggle
+    const freeToggle = document.getElementById('freeToggle');
+    const priceInput = document.getElementById('priceInput');
+    
+    // Initialize toggle based on price
+    freeToggle.checked = (document.querySelector('[name="price"]').value == '0');
+    priceInput.style.display = freeToggle.checked ? 'none' : 'block';
+
+    freeToggle.addEventListener('change', function() {
+      priceInput.style.display = this.checked ? 'none' : 'block';
+      if (this.checked) {
+        document.querySelector('[name="price"]').value = '0';
+      }
+    });
+
+    // Form submission
+    document.getElementById('editCourseForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      alert('Course updated successfully!');
+      // In real app: send to backend and redirect
+      // window.location.href = 'teacher-dashboard.html';
+    });
+  </script>
+</body>
+</html>

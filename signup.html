@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign Up</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      --primary-color: #adca9d;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Poppins', Arial, sans-serif;
+      background: #fff;
+      color: #2d3436;
+    }
+
+    nav {
+      background: rgba(245, 240, 232, 0.98);
+      backdrop-filter: blur(10px);
+      padding: 1.2rem 5%;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 2px 20px rgba(255, 107, 53, 0.1);
+      border-bottom: 2px solid rgba(255, 107, 53, 0.1);
+    }
+
+    .nav-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .logo-text {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #adca9d;
+      font-family: 'Georgia', serif;
+    }
+
+    .nav-cta {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .btn {
+      padding: 0.8rem 1.8rem;
+      border-radius: 30px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s;
+      border: none;
+      cursor: pointer;
+      font-size: 0.95rem;
+      display: inline-block;
+    }
+
+    .btn-primary {
+      background: var(--primary-color);
+      color: white;
+      box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--primary-color);
+      border: 2px solid var(--primary-color);
+    }
+
+    .btn[disabled] {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .wrap {
+      width: 92%;
+      max-width: 560px;
+      margin: 50px auto;
+    }
+
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 26px;
+      background: #fafafa;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 26px;
+      color: #333;
+    }
+
+    p {
+      margin: 0 0 18px;
+      color: #555;
+      line-height: 1.6;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 700;
+      font-size: 14px;
+      color: #444;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 11px 12px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-sizing: border-box;
+      outline: none;
+      background: #fff;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: #2e6d3f;
+      box-shadow: 0 0 0 3px rgba(46, 109, 63, 0.08);
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .link {
+      color: #2e6d3f;
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .link:hover {
+      text-decoration: underline;
+    }
+
+    .status {
+      margin-top: 12px;
+      font-size: 14px;
+      color: #777;
+      text-align: center;
+      min-height: 18px;
+    }
+
+    .status.err {
+      color: #a03030;
+    }
+
+    .status.ok {
+      color: #2e6d3f;
+    }
+
+    .hint {
+      font-size: 12px;
+      color: #777;
+      margin-top: 6px;
+    }
+  </style>
+</head>
+
+<body>
+  <nav>
+    <div class="nav-container">
+      <a href="/proj/index.php" style="text-decoration:none;"><span class="logo-text">প্রজ্ঞা</span></a>
+      <div class="nav-cta">
+        <a href="/proj/login.html" class="btn btn-secondary">Login</a>
+        <a href="/proj/signup.html" class="btn btn-primary">Sign Up</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="wrap">
+    <div class="card">
+      <h1>Create account</h1>
+      <p>Sign up to access courses and your dashboard.</p>
+
+      <form id="signupForm" novalidate>
+        <div class="form-group">
+          <label for="name">Full Name *</label>
+          <input id="name" type="text" required placeholder="Your name" />
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email *</label>
+          <input id="email" type="email" required placeholder="you@example.com" />
+        </div>
+
+        <div class="form-group">
+          <label for="role">Account Type *</label>
+          <select id="role" required>
+            <option value="learner">Learner</option>
+            <option value="teacher">Teacher</option>
+          </select>
+          <div class="hint">Choose “Teacher” if you plan to create and sell courses.</div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password *</label>
+          <input id="password" type="password" required placeholder="Create a password" />
+          <div class="hint">Minimum 6 characters recommended.</div>
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword">Confirm Password *</label>
+          <input id="confirmPassword" type="password" required placeholder="Re-type password" />
+        </div>
+
+        <button id="signupBtn" class="btn btn-primary" type="submit" style="width:100%;">Create account</button>
+
+        <div class="row">
+          <a class="link" href="/proj/login.html">Already have an account?</a>
+          <a class="link" href="/proj/index.php">Back to home</a>
+        </div>
+
+        <div id="statusMsg" class="status"></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function validEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    async function apiPostJson(url, body) {
+      const res = await fetch('/proj/api/auth/register.php', {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error || "Request failed");
+      return json;
+    }
+
+    document.getElementById("signupForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const status = document.getElementById("statusMsg");
+      const btn = document.getElementById("signupBtn");
+      status.className = "status";
+      status.textContent = "";
+
+      const name = document.getElementById("name").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const role = document.getElementById("role").value;
+      const password = document.getElementById("password").value;
+      const confirm_password = document.getElementById("confirmPassword").value;
+
+      // Front-end validation matching register.php expectations [file:628]
+      if (!name) { status.className = "status err"; status.textContent = "Name is required."; return; }
+      if (!email || !validEmail(email)) { status.className = "status err"; status.textContent = "Enter a valid email address."; return; }
+      if (role !== "learner" && role !== "teacher") { status.className = "status err"; status.textContent = "Select a valid account type."; return; }
+      if (!password || password.length < 6) { status.className = "status err"; status.textContent = "Password must be at least 6 characters."; return; }
+      if (password !== confirm_password) { status.className = "status err"; status.textContent = "Passwords do not match."; return; }
+
+      try {
+        btn.disabled = true;
+        status.textContent = "Creating account...";
+        // register.php reads JSON from php://input and uses keys: name, email, role, password, confirm_password [file:628]
+        const data = await apiPostJson("proj/api/auth/register.php", { name, email, role, password, confirm_password });
+        status.className = "status ok";
+        status.textContent = "Account created. Redirecting...";
+        // Backend sets redirect to /proj/teacher-dashboard.php or /proj/student-dashboard.php [file:628]
+        window.location.href = data.redirect || "/proj/index.php";
+      } catch (err) {
+        status.className = "status err";
+        status.textContent = err.message; // e.g. "Email already registered"
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+
+</html>

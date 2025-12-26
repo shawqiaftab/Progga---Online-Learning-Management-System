@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Learning Dashboard</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #ffffff;
+    }
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      padding: 0 30px;
+      height: 60px;
+      background: #adca9d;
+      color: #fff;
+      font-size: 18px;
+    }
+    .navbar a {
+      color: white;
+      margin-right: 20px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .logo img {
+      height: 100%;
+      width: auto;
+      object-fit: contain;
+    }
+    .logo {
+      height: 100%;
+      display: flex;
+      align-items: center;
+    }
+    .auth-links {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .auth-links a {
+      color: white;
+      font-weight: bold;
+      text-decoration: none;
+    }
+    .signup-btn {
+      padding: 8px 15px;
+      background: rgb(172, 82, 82);
+      color: #2e6d3f;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+
+    .dashboard-container {
+      width: 80%;
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #e5e5e5;
+    }
+
+    .user-greeting h1 {
+      margin: 0;
+      color: #333;
+      font-size: 24px;
+    }
+
+    .user-greeting p {
+      margin: 5px 0 0;
+      color: #666;
+      font-size: 14px;
+    }
+
+    /* Stats Overview */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .stat-card {
+      background: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .stat-card h3 {
+      margin: 0 0 10px;
+      color: #666;
+      font-size: 14px;
+    }
+
+    .stat-card p {
+      margin: 0;
+      font-size: 22px;
+      font-weight: bold;
+      color: #2e6d3f;
+    }
+
+    /* Course Sections */
+    .section-title {
+      font-size: 20px;
+      margin: 30px 0 20px;
+      color: #333;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .course-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 25px;
+      margin-bottom: 40px;
+    }
+
+    .course-card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .course-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .course-card img {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+    }
+
+    .course-content {
+      padding: 15px;
+    }
+
+    .course-content h3 {
+      margin: 0 0 8px;
+      font-size: 18px;
+      color: #333;
+    }
+
+    .course-meta {
+      display: flex;
+      justify-content: space-between;
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+
+    .progress-bar {
+      height: 6px;
+      background: #e0e0e0;
+      border-radius: 3px;
+      margin: 10px 0;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: #2e6d3f;
+    }
+
+    .progress-text {
+      font-size: 13px;
+      color: #555;
+      margin-bottom: 12px;
+    }
+
+    .action-btn {
+      display: block;
+      width: 100%;
+      padding: 8px;
+      background: #2e6d3f;
+      color: white;
+      text-align: center;
+      text-decoration: none;
+      font-weight: bold;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .action-btn:hover {
+      background: #1e522a;
+    }
+
+    /* Recommendations */
+    .recommendation-card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      background: #fafafa;
+    }
+
+    .recommendation-card h3 {
+      margin: 0 0 12px;
+      color: #2e6d3f;
+    }
+
+    .recommendation-card p {
+      margin: 0 0 15px;
+      color: #555;
+    }
+
+    .recommendation-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+    }
+
+    .mini-course {
+      padding: 12px;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      background: white;
+    }
+
+    .mini-course h4 {
+      margin: 0 0 6px;
+      font-size: 14px;
+      color: #333;
+    }
+
+    .mini-course .price {
+      font-weight: bold;
+      color: #2e6d3f;
+      font-size: 14px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #777;
+      border: 1px dashed #ddd;
+      border-radius: 8px;
+      grid-column: 1 / -1;
+    }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+  <div class="logo">
+    <img src="প্রজ্ঞা.png" alt="প্রজ্ঞা Logo">
+  </div>
+  <div style="margin-left: 30px;">
+    <a href="courses.html">Offered Courses</a>
+    <a href="discounts.html">Discounts</a>
+    <a href="student-dashboard.html">My Dashboard</a>
+    <a href="student-settings.html">Settings</a>
+  </div>
+  <div class="auth-links">
+    <!-- Profile Avatar -->
+    <div style="width: 36px; height: 36px; border-radius: 50%; background: #2e6d3f; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; margin-right: 10px;">
+      A
+    </div>
+    <!-- Logout Button -->
+    <a href="login.html" style="background: #f8d7da; color: #a03030; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 14px;">Logout</a>
+  </div>
+</div>
+
+  <div class="dashboard-container">
+    <div class="dashboard-header">
+      <div class="user-greeting">
+        <h1>Welcome back, Ahmed!</h1>
+        <p>Keep learning — you're on a great path!</p>
+      </div>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h3>ENROLLED COURSES</h3>
+        <p>4</p>
+      </div>
+      <div class="stat-card">
+        <h3>COMPLETED</h3>
+        <p>1</p>
+      </div>
+      <div class="stat-card">
+        <h3>LESSONS DONE</h3>
+        <p>37</p>
+      </div>
+      <div class="stat-card">
+        <h3>STREAK</h3>
+        <p>7 days</p>
+      </div>
+    </div>
+
+    <!-- In-Progress Courses -->
+    <h2 class="section-title">Continue Learning</h2>
+    <div class="course-grid">
+      <!-- Course 1 -->
+      <div class="course-card">
+        <img src="https://via.placeholder.com/300x140/e0e0e0/000000?text=Web+Dev" alt="Web Development">
+        <div class="course-content">
+          <h3>Web Development Bootcamp</h3>
+          <div class="course-meta">
+            <span>24 Lessons</span>
+            <span>Beginner</span>
+          </div>
+          <div class="progress-text">65% Complete • Next: CSS Grid</div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: 65%"></div>
+          </div>
+          <a href="course1.html" class="action-btn">Resume Course</a>
+        </div>
+      </div>
+
+      <!-- Course 2 -->
+      <div class="course-card">
+        <img src="https://via.placeholder.com/300x140/e0e0e0/000000?text=Algo" alt="Algorithms">
+        <div class="course-content">
+          <h3>Data Structures & Algorithms</h3>
+          <div class="course-meta">
+            <span>32 Lessons</span>
+            <span>Intermediate</span>
+          </div>
+          <div class="progress-text">30% Complete • Next: Trees</div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: 30%"></div>
+          </div>
+          <a href="course2.html" class="action-btn">Resume Course</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Completed Courses -->
+    <h2 class="section-title">Completed Courses</h2>
+    <div class="course-grid">
+      <div class="course-card">
+        <img src="https://via.placeholder.com/300x140/e0e0e0/000000?text=HTML+CSS" alt="HTML & CSS">
+        <div class="course-content">
+          <h3>HTML & CSS Fundamentals</h3>
+          <div class="course-meta">
+            <span>12 Lessons</span>
+            <span>Beginner</span>
+          </div>
+          <div class="progress-text">100% Complete ✅</div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: 100%"></div>
+          </div>
+          <a href="course1_completed.html" class="action-btn">Review Course</a>
+        </div>
+      </div>
+    </div>
+    <!-- Blog Section -->
+<h2 class="section-title">My Blog</h2>
+<div class="course-grid">
+  <div class="course-card">
+    <img src="https://via.placeholder.com/300x140/f0f7ef/2e6d3f?text=Blog" alt="My Blog">
+    <div class="course-content">
+      <h3>Learning Journal & Articles</h3>
+      <div class="course-meta">
+        <span>5 Posts</span>
+        <span>2 Published</span>
+      </div>
+      <div class="progress-text">Share your journey, tips, and insights</div>
+      <a href="blog-dashboard.html" class="action-btn">Go to My Blog</a>
+    </div>
+  </div>
+</div>
+    <!-- Recommended Courses -->
+    <h2 class="section-title">Recommended For You</h2>
+    <div class="recommendation-card">
+      <h3>Based on your progress in Web Development</h3>
+      <p>Continue building your skills with these popular courses</p>
+      <div class="recommendation-grid">
+        <div class="mini-course">
+          <h4>JavaScript Essentials</h4>
+          <div class="price">৳ 990</div>
+        </div>
+        <div class="mini-course">
+          <h4>React Fundamentals</h4>
+          <div class="price">৳ 1,490</div>
+        </div>
+        <div class="mini-course">
+          <h4>Responsive Design</h4>
+          <div class="price">Free</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

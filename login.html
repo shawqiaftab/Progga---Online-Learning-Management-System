@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet" />
+
+  <style>
+    :root {
+      --primary-color: #adca9d;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Poppins', Arial, sans-serif;
+      background: #ffffff;
+      color: #2d3436;
+    }
+
+    nav {
+      background: rgba(245, 240, 232, 0.98);
+      backdrop-filter: blur(10px);
+      padding: 1.2rem 5%;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 2px 20px rgba(255, 107, 53, 0.1);
+      border-bottom: 2px solid rgba(255, 107, 53, 0.1);
+    }
+
+    .nav-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .logo-text {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #adca9d;
+      font-family: 'Georgia', serif;
+    }
+
+    .nav-links {
+      display: flex;
+      list-style: none;
+      gap: 2.5rem;
+      align-items: center;
+      margin: 0;
+      padding: 0;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: #2d3436;
+      font-weight: 500;
+      transition: color 0.3s;
+      position: relative;
+      font-size: 1rem;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 0;
+      height: 3px;
+      background: #FF6B35;
+      transition: width 0.3s;
+      border-radius: 2px;
+    }
+
+    .nav-links a:hover {
+      color: #FF6B35;
+    }
+
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+
+    .nav-cta {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .btn {
+      padding: 0.8rem 1.8rem;
+      border-radius: 30px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s;
+      border: none;
+      cursor: pointer;
+      font-size: 0.95rem;
+      display: inline-block;
+    }
+
+    .btn-primary {
+      background: var(--primary-color);
+      color: white;
+      box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(255, 107, 53, 0.4);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--primary-color);
+      border: 2px solid var(--primary-color);
+    }
+
+    .btn-secondary:hover {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    .wrap {
+      width: 92%;
+      max-width: 520px;
+      margin: 50px auto;
+    }
+
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 26px;
+      background: #fafafa;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 26px;
+      color: #333;
+    }
+
+    p {
+      margin: 0 0 18px;
+      color: #555;
+      line-height: 1.6;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 700;
+      font-size: 14px;
+      color: #444;
+    }
+
+    input {
+      width: 100%;
+      padding: 11px 12px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-sizing: border-box;
+      outline: none;
+      background: #fff;
+    }
+
+    input:focus {
+      border-color: #2e6d3f;
+      box-shadow: 0 0 0 3px rgba(46, 109, 63, 0.08);
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    .link {
+      color: #2e6d3f;
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .link:hover {
+      text-decoration: underline;
+    }
+
+    .status {
+      margin-top: 12px;
+      font-size: 14px;
+      color: #777;
+      text-align: center;
+      min-height: 18px;
+    }
+
+    .status.err {
+      color: #a03030;
+    }
+
+    .status.ok {
+      color: #2e6d3f;
+    }
+
+    @media (max-width: 968px) {
+      .nav-links {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <nav id="navbar">
+    <div class="nav-container">
+      <div class="logo">
+        <a href="/proj/index.php" style="text-decoration:none;">
+          <span class="logo-text">প্রজ্ঞা</span>
+        </a>
+      </div>
+      <ul class="nav-links">
+        <li><a href="/proj/index.php#home">Home</a></li>
+        <li><a href="/proj/courses.php">Courses</a></li>
+        <li><a href="/proj/discounts.php">Discounts</a></li>
+      </ul>
+      <div class="nav-cta">
+        <a href="/proj/login.html" class="btn btn-secondary">Login</a>
+        <a href="/proj/signup.html" class="btn btn-primary">Sign Up</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="wrap">
+    <div class="card">
+      <h1>Login</h1>
+      <p>Sign in to continue to your dashboard.</p>
+
+      <form id="loginForm" autocomplete="on">
+        <div class="form-group">
+          <label for="email">Email *</label>
+          <input id="email" name="email" type="email" required placeholder="you@example.com" />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password *</label>
+          <input id="password" name="password" type="password" required placeholder="Enter your password" />
+        </div>
+
+        <button class="btn btn-primary" type="submit" style="width:100%;">Login</button>
+
+        <div class="row">
+          <a class="link" href="/proj/signup.html">Create account</a>
+          <a class="link" href="/proj/index.php">Back to home</a>
+        </div>
+
+        <div id="statusMsg" class="status"></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    async function apiPostJson(url, body) {
+      const res = await fetch('/proj/api/auth/login.php', {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error || "Request failed");
+      return json;
+    }
+
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const status = document.getElementById("statusMsg");
+      status.className = "status";
+      status.textContent = "Signing in...";
+
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      try {
+        const data = await apiPostJson("/proj/login.php", { email, password });
+        status.className = "status ok";
+        status.textContent = "Login successful. Redirecting...";
+
+
+        const redirect = data.redirect || "/proj/index.php";
+
+        const target = redirect.startsWith("/") ? redirect : ("/proj/" + redirect.replace(/^\.?\//, ""));
+        window.location.href = target;
+      } catch (err) {
+        status.className = "status err";
+        status.textContent = err.message;
+      }
+    });
+  </script>
+</body>
+
+</html>

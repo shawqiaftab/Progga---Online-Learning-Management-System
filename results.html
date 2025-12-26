@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Exam Results</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #ffffff;
+    }
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      padding: 0 30px;
+      height: 60px;
+      background: #adca9d;
+      color: #fff;
+      font-size: 18px;
+    }
+    .navbar a {
+      color: white;
+      margin-right: 20px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .logo img {
+      height: 100%;
+      width: auto;
+      object-fit: contain;
+    }
+    .logo {
+      height: 100%;
+      display: flex;
+      align-items: center;
+    }
+    .auth-links {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .auth-links a {
+      color: white;
+      font-weight: bold;
+      text-decoration: none;
+    }
+    .signup-btn {
+      padding: 8px 15px;
+      background: rgb(172, 82, 82);
+      color: #2e6d3f;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+
+    .results-container {
+      width: 70%;
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .results-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .results-header h1 {
+      font-size: 28px;
+      color: #333;
+      margin: 0 0 10px;
+    }
+
+    .score-card {
+      background: #f0f7ef;
+      border-radius: 12px;
+      padding: 25px;
+      text-align: center;
+      margin-bottom: 30px;
+      border: 2px solid #d4e8d0;
+    }
+
+    .score-value {
+      font-size: 64px;
+      font-weight: bold;
+      color: #2e6d3f;
+      margin: 10px 0;
+      line-height: 1;
+    }
+
+    .score-text {
+      font-size: 18px;
+      color: #555;
+      margin: 0 0 15px;
+    }
+
+    .score-stats {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin-top: 15px;
+      color: #666;
+      font-size: 14px;
+    }
+
+    .stat-item strong {
+      display: block;
+      font-size: 18px;
+      color: #333;
+    }
+
+    .section-title {
+      font-size: 22px;
+      margin: 30px 0 20px;
+      color: #333;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .question-list {
+      margin-bottom: 30px;
+    }
+
+    .question-card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 18px;
+      margin-bottom: 15px;
+      background: #fafafa;
+    }
+
+    .question-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .question-number {
+      font-weight: bold;
+      color: #2e6d3f;
+    }
+
+    .question-status {
+      font-weight: bold;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 13px;
+    }
+
+    .status-correct {
+      background: #d4e8d0;
+      color: #2e6d3f;
+    }
+
+    .status-incorrect {
+      background: #f8d7da;
+      color: #a03030;
+    }
+
+    .question-text {
+      margin: 0 0 12px;
+      font-size: 16px;
+      color: #333;
+    }
+
+    .answer-choice {
+      padding: 8px 12px;
+      margin: 4px 0;
+      border-radius: 4px;
+      font-size: 15px;
+    }
+
+    .answer-correct {
+      background: #d4e8d0;
+      color: #2e6d3f;
+      font-weight: bold;
+    }
+
+    .answer-incorrect {
+      background: #f8d7da;
+      color: #a03030;
+    }
+
+    .answer-feedback {
+      margin-top: 10px;
+      padding: 10px;
+      background: #eef5ed;
+      border-left: 3px solid #2e6d3f;
+      font-size: 14px;
+      color: #555;
+      border-radius: 0 4px 4px 0;
+    }
+
+    .action-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .action-btn {
+      padding: 10px 24px;
+      text-decoration: none;
+      font-weight: bold;
+      border-radius: 6px;
+      font-size: 16px;
+      display: inline-block;
+    }
+
+    .btn-review {
+      background: #2e6d3f;
+      color: white;
+    }
+
+    .btn-review:hover {
+      background: #1e522a;
+    }
+
+    .btn-retake {
+      background: #be723f;
+      color: white;
+    }
+
+    .btn-retake:hover {
+      background: #a55a2a;
+    }
+
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 20px;
+      color: #2e6d3f;
+      text-decoration: underline;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <div class="logo">
+      <img src="প্রজ্ঞা.png" alt="প্রজ্ঞা Logo">
+    </div>
+    <div style="margin-left: 30px;">
+      <a href="courses.html">Offered Courses</a>
+      <a href="discounts.html">Discounts</a>
+      <a href="student-dashboard.html">My Dashboard</a>
+    </div>
+    <div class="auth-links">
+      <a href="login.html">Login</a>
+      <a href="signup.html" class="signup-btn">Sign Up</a>
+    </div>
+  </div>
+
+  <div class="results-container">
+    <div class="results-header">
+      <h1>Exam Results</h1>
+      <p>HTML & CSS Fundamentals — Final Exam</p>
+    </div>
+
+    <div class="score-card">
+      <div class="score-text">Your Score</div>
+      <div class="score-value">92%</div>
+      <div class="score-text">Excellent! You've mastered the fundamentals.</div>
+      <div class="score-stats">
+        <div class="stat-item">
+          <strong>23</strong> Correct
+        </div>
+        <div class="stat-item">
+          <strong>2</strong> Incorrect
+        </div>
+        <div class="stat-item">
+          <strong>25</strong> Total
+        </div>
+      </div>
+    </div>
+
+    <h2 class="section-title">Question Review</h2>
+    <div class="question-list">
+      <!-- Correct Question -->
+      <div class="question-card">
+        <div class="question-header">
+          <div class="question-number">Question 1</div>
+          <div class="question-status status-correct">✓ Correct</div>
+        </div>
+        <div class="question-text">Which HTML tag is used to define an internal stylesheet?</div>
+        <div class="answer-choice answer-correct">A) &lt;style&gt;</div>
+        <div class="answer-choice">B) &lt;css&gt;</div>
+        <div class="answer-choice">C) &lt;script&gt;</div>
+        <div class="answer-choice">D) &lt;link&gt;</div>
+      </div>
+
+      <!-- Incorrect Question -->
+      <div class="question-card">
+        <div class="question-header">
+          <div class="question-number">Question 5</div>
+          <div class="question-status status-incorrect">✗ Incorrect</div>
+        </div>
+        <div class="question-text">What does CSS stand for?</div>
+        <div class="answer-choice answer-incorrect">A) Creative Style Sheets</div>
+        <div class="answer-choice answer-correct">B) Cascading Style Sheets</div>
+        <div class="answer-choice">C) Computer Style Sheets</div>
+        <div class="answer-choice">D) Colorful Style Sheets</div>
+        <div class="answer-feedback">
+          <strong>Explanation:</strong> CSS stands for Cascading Style Sheets. It's used to style HTML elements.
+        </div>
+      </div>
+
+      <!-- Another Correct -->
+      <div class="question-card">
+        <div class="question-header">
+          <div class="question-number">Question 12</div>
+          <div class="question-status status-correct">✓ Correct</div>
+        </div>
+        <div class="question-text">Which property is used to change the background color?</div>
+        <div class="answer-choice">A) bgcolor</div>
+        <div class="answer-choice answer-correct">B) background-color</div>
+        <div class="answer-choice">C) color</div>
+        <div class="answer-choice">D) bg-color</div>
+      </div>
+    </div>
+
+    <div class="action-buttons">
+      <a href="course1_completed.html" class="action-btn btn-review">Review Course</a>
+      <a href="#" class="action-btn btn-retake">Retake Exam</a>
+    </div>
+
+    <a href="student-dashboard.html" class="back-link">← Back to My Dashboard</a>
+  </div>
+
+  <script>
+    document.querySelector('.btn-retake').addEventListener('click', function(e) {
+      e.preventDefault();
+      if (confirm('Are you sure you want to retake this exam? Your new score will replace the current one.')) {
+        alert('Starting new exam session...');
+        // In real app: redirect to exam
+      }
+    });
+  </script>
+</body>
+</html>

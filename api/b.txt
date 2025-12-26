@@ -1,0 +1,2474 @@
+Folder: auth
+
+guard.php
+<?php
+
+declare(strict_types=1);
+
+
+if (session_status() !== PHP_SESSION_ACTIVE) {
+  session_start(); 
+}
+
+
+const BASE_PATH = "/proj";
+
+function redirect(string $path): void {
+  header("Location: " . BASE_PATH . $path);
+  exit; 
+}
+
+function require_login(): void {
+  if (empty($_SESSION["user_id"])) {
+    redirect("/login.html");
+  }
+}
+
+function require_role(string $role): void {
+  require_login();
+  if (($_SESSION["role"] ?? "") !== $role) {
+    http_response_code(403);
+    echo "Forbidden";
+    exit;
+  }
+}
+
+function current_user_id(): int {
+  return (int)($_SESSION["user_id"] ?? 0);
+}
+
+function current_user_name(): string {
+  return (string)($_SESSION["name"] ?? "");
+}
+
+function current_user_email(): string {
+  return (string)($_SESSION["email"] ?? "");
+}
+
+function current_user_role(): string {
+  return (string)($_SESSION["role"] ?? "");
+}
+
+login.php
+<?php
+declare(strict_types=1);
+
+session_start(); 
+
+require __DIR__ . '/../../config/db.php';
+
+function respond(int $code, array $data): void {
+  header('Content-Type: application/json; charset=utf-8');
+  http_response_code($code);
+  echo json_encode($data, JSON_UNESCAPED_UNICODE);
+  exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+  respond(405, ["ok" => false, "error" => "Method not allowed"]);
+}
+
+
+$raw = file_get_contents("php://input");
+$data = json_decode($raw, true);
+
+$email = trim((string)($data["email"] ?? ""));
+$pass = (string)($data["password"] ?? "");
+
+if ($email === "" || $pass === "") {
+  respond(400, ["ok" => false, "error" => "Email and password required"]);
+}
+
+
+$stmt = $pdo->prepare("SELECT id, name, email, password_hash, role FROM users WHERE email = ? LIMIT 1");
+$stmt->execute([$email]);
+$user = $stmt->fetch();
+
+if (!$user) {
+  respond(401, ["ok" => false, "error" => "Invalid email or password"]);
+}
+
+
+if (!password_verify($pass, (string)$user["password_hash"])) {
+  respond(401, ["ok" => false, "error" => "Invalid email or password"]);
+}
+
+
+$_SESSION["user_id"] = (int)$user["id"];
+$_SESSION["name"] = (string)$user["name"];
+$_SESSION["email"] = (string)$user["email"];
+$_SESSION["role"] = (string)$user["role"];
+
+
+$role = $_SESSION["role"];
+$redirect = ($role === "teacher" || $role === "admin")
+  ? "/proj/teacher-dashboard.php"
+  : "/proj/student-dashboard.php";
+
+respond(200, [
+  "ok" => true,
+  "user" => [
+    "id" => (int)$user["id"],
+    "name" => (string)$user["name"],
+    "email" => (string)$user["email"],
+    "role" => (string)$user["role"],
+  ],
+  "redirect" => $redirect
+]);
+
+logout.php
+<?php
+session_start();
+
+$_SESSION = [];
+if (ini_get("session.use_cookies")) {
+  $params = session_get_cookie_params();
+  setcookie(session_name(), '', time() - 42000,
+    $params["path"], $params["domain"], $params["secure"], $params["httponly"]
+  );
+}
+session_destroy();
+
+
+header("Location: /proj/index.php");
+exit;
+
+register.php
+<?php
+declare(strict_types=1);
+
+session_start(); 
+
+require __DIR__ . '/../../config/db.php'; 
+
+function respond(int $code, array $data): void {
+  header('Content-Type: application/json; charset=utf-8');
+  http_response_code($code);
+  echo json_encode($data, JSON_UNESCAPED_UNICODE);
+  exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+  respond(405, ["ok" => false, "error" => "Method not allowed"]);
+}
+
+
+$raw = file_get_contents("php://input");
+$data = json_decode($raw, true) ?? [];
+
+$name = trim((string)($data["name"] ?? ""));
+$email = trim((string)($data["email"] ?? ""));
+$role = trim((string)($data["role"] ?? "learner"));
+$pass = (string)($data["password"] ?? "");
+$pass2 = (string)($data["confirm_password"] ?? $pass);
+
+if ($name === "" || $email === "" || $pass === "") {
+  respond(400, ["ok" => false, "error" => "Name, email and password required"]);
+}
+
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+  respond(400, ["ok" => false, "error" => "Invalid email address"]);
+}
+
+if ($pass !== $pass2) {
+  respond(400, ["ok" => false, "error" => "Passwords do not match"]);
+}
+
+if (!in_array($role, ["learner", "teacher"], true)) {
+  $role = "learner";
+}
+
+
+$chk = $pdo->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
+$chk->execute([$email]);
+if ($chk->fetch()) {
+  respond(409, ["ok" => false, "error" => "Email already registered"]);
+}
+
+
+$hash = password_hash($pass, PASSWORD_DEFAULT);
+$ins = $pdo->prepare("INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)");
+$ins->execute([$name, $email, $hash, $role]);
+
+$userId = (int)$pdo->lastInsertId();
+
+
+$_SESSION["user_id"] = $userId;
+$_SESSION["name"] = $name;
+$_SESSION["email"] = $email;
+$_SESSION["role"] = $role;
+
+$redirect = ($role === "teacher")
+  ? "/proj/teacher-dashboard.php"
+  : "/proj/student-dashboard.php";
+
+respond(201, [
+  "ok" => true,
+  "user" => [
+    "id" => $userId,
+    "name" => $name,
+    "email" => $email,
+    "role" => $role,
+  ],
+  "redirect" => $redirect
+]);
+=======================================================
+Folder: blog
+delete.php
+<?php
+declare(strict_types=1);
+
+session_start();
+require __DIR__ . "/../../config/db.php";
+
+header("Content-Type: application/json; charset=utf-8");
+
+function respond(int $code, array $payload): void {
+  http_response_code($code);
+  echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+  exit;
+}
+
+if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+  respond(405, ["ok" => false, "error" => "Method not allowed"]);
+}
+
+if (empty($_SESSION["user_id"])) {
+  respond(401, ["ok" => false, "error" => "Not logged in"]);
+}
+
+$authorId = (int)$_SESSION["user_id"];
+
+$raw = file_get_contents("php://input");
+$data = json_decode($raw, true);
+$postId = (int)($data["id"] ?? 0);
+
+if ($postId <= 0) {
+  respond(400, ["ok" => false, "error" => "Invalid post id"]);
+}
+
+try {
+  $stmt = $pdo->prepare("SELECT id, status FROM blog_posts WHERE id = ? AND author_id = ? LIMIT 1");
+  $stmt->execute([$postId, $authorId]);
+  $post = $stmt->fetch();
+
+  if (!$post) {
+    respond(404, ["ok" => false, "error" => "Post not found"]);
+  }
+
+  if ($post["status"] === "published") {
+    respond(403, ["ok" => false, "error" => "Cannot delete published posts"]);
+  }
+
+  $del = $pdo->prepare("DELETE FROM blog_posts WHERE id = ? AND author_id = ?");
+  $del->execute([$postId, $authorId]);
+
+  respond(200, ["ok" => true, "deleted" => $postId]);
+} catch (Throwable $e) {
+  respond(500, ["ok" => false, "error" => "Server error"]);
+}
+
+get.php
+<?php
+declare(strict_types=1);
+session_start();
+
+require __DIR__ . "/../../config/db.php";
+
+function respond(int $code, array $data): void {
+  http_response_code($code);
+  header("Content-Type: application/json");
+  echo json_encode($data);
+  exit;
+}
+
+if (empty($_SESSION["user_id"])) {
+  respond(401, ["ok" => false, "error" => "Not logged in"]);
+}
+
+
+$courseId = (int)($_GET["id"] ?? $_GET["courseId"] ?? 0);
+
+if ($courseId <= 0) {
+  respond(400, ["ok" => false, "error" => "Invalid course ID"]);
+}
+
+try {
+  
+  $stmt = $pdo->prepare("
+    SELECT id, instructor_id, title, category, description, thumbnail_url,
+           difficulty, total_lessons,
+           duration_hours, duration_weeks,
+           price
+    FROM courses
+    WHERE id = ?
+    LIMIT 1
+  ");
+  
+  $stmt->execute([$courseId]);
+  $c = $stmt->fetch();
+  
+  if (!$c) {
+    respond(404, ["ok" => false, "error" => "Course not found"]);
+  }
+  
+  $price = isset($c["price"]) ? (float)$c["price"] : 0.0;
+  $isFree = $price <= 0;
+  
+  $duration = null;
+  if (isset($c["duration_hours"]) && $c["duration_hours"] !== null) {
+    $duration = (float)$c["duration_hours"];
+  } else if (isset($c["duration_weeks"]) && $c["duration_weeks"] !== null) {
+    $duration = (float)$c["duration_weeks"];
+  }
+  
+  respond(200, [
+    "ok" => true,
+    "course" => [
+      "id" => (int)$c["id"],
+      "title" => (string)$c["title"],
+      "category" => (string)($c["category"] ?? ""),
+      "description" => (string)($c["description"] ?? ""),
+      "difficulty" => (string)($c["difficulty"] ?? "Beginner"),
+      "lessons" => (int)($c["total_lessons"] ?? 0),
+      "duration" => $duration,
+      "price" => $price,
+      "isFree" => $isFree,
+      "thumbnailUrl" => (string)($c["thumbnail_url"] ?? "")
+    ]
+  ]);
+  
+} catch (Throwable $e) {
+  respond(500, ["ok" => false, "error" => "Server error"]);
+}
+
+list.php
+<?php
+declare(strict_types=1);
+
+session_start();
+require __DIR__ . "/../../config/db.php";
+
+header("Content-Type: application/json; charset=utf-8");
+
+function respond(int $code, array $payload): void {
+  http_response_code($code); 
+  echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+  exit;
+}
+
+if (empty($_SESSION["user_id"])) {
+  respond(401, ["ok" => false, "error" => "Not logged in"]);
+}
+
+$authorId = (int)$_SESSION["user_id"];
+
+try {
+  $stmt = $pdo->prepare("
+    SELECT id, title, excerpt, status, views, created_at, updated_at
+    FROM blog_posts
+    WHERE author_id = ?
+    ORDER BY created_at DESC
+  ");
+  $stmt->execute([$authorId]);
+  $rows = $stmt->fetchAll();
+
+  $published = [];
+  $drafts = [];
+  $totalViews = 0;
+
+  foreach ($rows as $r) {
+    $post = [
+      "id" => (int)$r["id"],
+      "title" => (string)$r["title"],
+      "excerpt" => (string)$r["excerpt"],
+      "status" => (string)$r["status"],
+      "views" => (int)($r["views"] ?? 0),
+      "createdAt" => (string)$r["created_at"],
+      "updatedAt" => (string)($r["updated_at"] ?? $r["created_at"]),
+    ];
+
+    if ($post["status"] === "published") {
+      $published[] = $post;
+      $totalViews += $post["views"];
+    } else {
+      $drafts[] = $post;
+    }
+  }
+
+  respond(200, [
+    "ok" => true,
+    "published" => $published,
+    "drafts" => $drafts,
+    "stats" => [
+      "totalPosts" => count($rows),
+      "published" => count($published),
+      "drafts" => count($drafts),
+      "totalViews" => $totalViews,
+    ]
+  ]);
+} catch (Throwable $e) {
+  respond(500, ["ok" => false, "error" => "Server error"]);
+}
+
+save.php
+<?php
+declare(strict_types=1);
+
+session_start();
+require __DIR__ . "/../../config/db.php";
+
+header("Content-Type: application/json; charset=utf-8");
+
+function respond(int $code, array $payload): void {
+  http_response_code($code);
+  echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+  exit;
+}
+
+if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+  respond(405, ["ok" => false, "error" => "Method not allowed"]);
+}
+
+if (empty($_SESSION["user_id"])) {
+  respond(401, ["ok" => false, "error" => "Not logged in"]);
+}
+
+$raw = file_get_contents("php://input");
+$data = json_decode($raw, true);
+if (!is_array($data)) {
+  respond(400, ["ok" => false, "error" => "Invalid JSON"]);
+}
+
+$authorId = (int)$_SESSION["user_id"];
+
+$id = isset($data["id"]) && $data["id"] !== "" ? (int)$data["id"] : 0;
+
+$title = trim((string)($data["title"] ?? ""));
+$category = trim((string)($data["category"] ?? "Learning Journey"));
+$status = trim((string)($data["status"] ?? "draft"));
+$content = (string)($data["content"] ?? "");
+
+if ($title === "" || trim($content) === "") {
+  respond(400, ["ok" => false, "error" => "Title and content are required"]);
+}
+
+if (!in_array($status, ["draft", "published"], true)) {
+  $status = "draft";
+}
+
+
+$excerpt = mb_substr(trim(preg_replace('/\s+/', ' ', strip_tags($content))), 0, 200);
+
+try {
+  if ($id <= 0) {
+    // CREATE
+    $stmt = $pdo->prepare("
+      INSERT INTO blog_posts (author_id, title, category, excerpt, content, status, views)
+      VALUES (?, ?, ?, ?, ?, ?, 0)
+    ");
+    $stmt->execute([$authorId, $title, $category, $excerpt, $content, $status]);
+
+    $newId = (int)$pdo->lastInsertId();
+    respond(201, ["ok" => true, "id" => $newId, "status" => $status]);
+  }
+
+
+  $chk = $pdo->prepare("SELECT id FROM blog_posts WHERE id = ? AND author_id = ? LIMIT 1");
+  $chk->execute([$id, $authorId]);
+  if (!$chk->fetch()) {
+    respond(403, ["ok" => false, "error" => "Not allowed"]);
+  }
+
+  $upd = $pdo->prepare("
+    UPDATE blog_posts
+    SET title = ?, category = ?, excerpt = ?, content = ?, status = ?
+    WHERE id = ? AND author_id = ?
+  ");
+  $upd->execute([$title, $category, $excerpt, $content, $status, $id, $authorId]);
+
+  respond(200, ["ok" => true, "id" => $id, "status" => $status]);
+} catch (Throwable $e) {
+  respond(500, ["ok" => false, "error" => "Server error"]);
+}
+=======================================================
+Folder: courses
+create.php
+<?php
+declare(strict_types=1);
+
+session_start();
+require __DIR__ . "/../../config/db.php";
+
+header("Content-Type: application/json; charset=utf-8");
+
+function respond(int $code, array $payload): void {
+  http_response_code($code); 
+  echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+  exit;
+}
+
+if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+  respond(405, ["ok" => false, "error" => "Method not allowed"]);
+}
+
+if (empty($_SESSION["user_id"])) {
+  respond(401, ["ok" => false, "error" => "Not logged in"]);
+}
+
+$instructorId = (int)$_SESSION["user_id"];
+
+$title = trim((string)($_POST["title"] ?? ""));
+$category = trim((string)($_POST["category"] ?? ""));
+$description = trim((string)($_POST["description"] ?? ""));
+$difficulty = trim((string)($_POST["difficulty"] ?? "Beginner"));
+$totalLessons = (int)($_POST["lessons"] ?? 0);
+$durationHours = (float)($_POST["duration"] ?? 0);
+$isFree = ((string)($_POST["is_free"] ?? "0") === "1");
+
+$price = (float)($_POST["price"] ?? 0);
+if ($isFree) $price = 0.0;
+
+if ($title === "" || $category === "" || $description === "") {
+  respond(400, ["ok" => false, "error" => "Title, category and description are required"]);
+}
+if ($totalLessons <= 0) {
+  respond(400, ["ok" => false, "error" => "Total lessons must be at least 1"]);
+}
+if (!in_array($difficulty, ["Beginner", "Intermediate", "Advanced"], true)) {
+  $difficulty = "Beginner";
+}
+
+$thumbnailUrl = "";
+
+
+if (isset($_FILES["thumbnail"]) && is_array($_FILES["thumbnail"]) && ($_FILES["thumbnail"]["error"] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+  if (($_FILES["thumbnail"]["error"] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
+    respond(400, ["ok" => false, "error" => "Thumbnail upload failed"]);
+  }
+
+  $tmp = (string)$_FILES["thumbnail"]["tmp_name"];
+  $origName = (string)$_FILES["thumbnail"]["name"];
+
+  $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+  $allowed = ["jpg", "jpeg", "png", "webp"];
+  if (!in_array($ext, $allowed, true)) {
+    respond(400, ["ok" => false, "error" => "Thumbnail must be JPG/PNG/WEBP"]);
+  }
+
+  $uploadDir = __DIR__ . "/../../uploads/course_thumbs";
+  if (!is_dir($uploadDir)) {
+    mkdir($uploadDir, 0777, true);
+  }
+
+  $safeName = "course_" . time() . "_" . bin2hex(random_bytes(6)) . "." . $ext;
+  $dest = $uploadDir . "/" . $safeName;
+
+  if (!move_uploaded_file($tmp, $dest)) { 
+    respond(500, ["ok" => false, "error" => "Failed to save thumbnail"]);
+  }
+
+
+  $thumbnailUrl = "/proj/uploads/course_thumbs/" . $safeName;
+}
+
+try {
+
+  $stmt = $pdo->prepare("
+    INSERT INTO courses
+      (instructor_id, title, category, description, difficulty, total_lessons, duration_hours, thumbnail_url, price, created_at)
+    VALUES
+      (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+  ");
+  $stmt->execute([
+    $instructorId,
+    $title,
+    $category,
+    $description,
+    $difficulty,
+    $totalLessons,
+    $durationHours,
+    $thumbnailUrl,
+    $price
+  ]);
+
+  $courseId = (int)$pdo->lastInsertId();
+  respond(201, ["ok" => true, "courseId" => $courseId]);
+} catch (Throwable $e) {
+  respond(500, ["ok" => false, "error" => "Server error"]);
+}
+
+delete.php
+<?php
+
+declare(strict_types=1);
+
+session_start();
+require __DIR__ . "/../../config/db.php"; 
+
+header("Content-Type: application/json; charset=utf-8");
+
+function respond(int $code, array $payload): void
+{
+  http_response_code($code);
+  echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+  exit;
+}
+
+if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+  respond(405, ["ok" => false, "error" => "Method not allowed"]);
+}
+
+if (empty($_SESSION["user_id"])) {
+  respond(401, ["ok" => false, "error" => "Not logged in"]);
+}
+if (($_SESSION["role"] ?? "") !== "teacher") {
+  respond(403, ["ok" => false, "error" => "Only teachers can delete courses"]);
+}
+
+$teacherId = (int)$_SESSION["user_id"];
+
+
+$raw = file_get_contents("php://input");
+$data = json_decode($raw, true);
+$courseId = (int)($data["course_id"] ?? ($_GET["id"] ?? $_POST["id"] ?? 0));
+
+if ($courseId <= 0) {
+  respond(400, ["ok" => false, "error" => "course_id required"]);
+}
+
+
+$own = $pdo->prepare("SELECT id FROM courses WHERE id = ? AND instructor_id = ? LIMIT 1");
+$own->execute([$courseId, $teacherId]);
+$row = $own->fetch();
+
+if (!$row) {
+  respond(404, ["ok" => false, "error" => "Course not found or not owned by you"]);
+}
+
+
+$del = $pdo->prepare("DELETE FROM courses WHERE id = ? AND instructor_id = ?");
+$del->execute([$courseId, $teacherId]);
+
+respond(200, ["ok" => true, "deleted" => $courseId]);
+
+get.php
+<?php
+declare(strict_types=1);
+session_start();
+require __DIR__ . "/../../config/db.php"; 
+
+header("Content-Type: application/json; charset=utf-8");
+
+function respond(int $code, array $payload): void {
+  http_response_code($code);
+  echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+  exit;
+}
+
+$courseId = (int)($_GET["courseId"] ?? $_GET["id"] ?? 0);
+if ($courseId <= 0) respond(400, ["ok"=>false, "error"=>"Invalid courseId"]);
+
+try {
+  $stmt = $pdo->prepare("
+    SELECT
+      c.id,
+      c.instructor_id,
+      c.title,
+      c.category,
+      c.description,
+      c.thumbnail_url,
+      c.video_url,
+      c.difficulty,
+      c.total_lessons,
+      c.duration_hours,
+      c.duration_weeks,
+      c.price,
+      c.learn_points,
+      u.name AS teacher_name
+    FROM courses c
+    LEFT JOIN users u ON u.id = c.instructor_id
+    WHERE c.id = ?
+    LIMIT 1
+  ");
+  $stmt->execute([$courseId]);
+  $c = $stmt->fetch(PDO::FETCH_ASSOC);
+
+  if (!$c) respond(404, ["ok"=>false, "error"=>"Course not found"]);
+
+  
+  $learnPointsRaw = (string)($c["learn_points"] ?? "");
+  $learnPoints = [];
+  if ($learnPointsRaw !== "") {
+    $asJson = json_decode($learnPointsRaw, true);
+    if (is_array($asJson)) {
+      foreach ($asJson as $p) {
+        $p = trim((string)$p);
+        if ($p !== "") $learnPoints[] = $p;
+      }
+    } else {
+      foreach (preg_split("/\r\n|\n|\r/", $learnPointsRaw) as $p) {
+        $p = trim($p);
+        if ($p !== "") $learnPoints[] = $p;
+      }
+    }
+  }
+
+  $price = (float)($c["price"] ?? 0);
+
+  respond(200, [
+    "ok" => true,
+    "course" => [
+      "id" => (int)$c["id"],
+      "title" => (string)$c["title"],
+      "category" => (string)($c["category"] ?? ""),
+      "description" => (string)($c["description"] ?? ""),
+      "difficulty" => (string)($c["difficulty"] ?? "Beginner"),
+      "thumbnailUrl" => (string)($c["thumbnail_url"] ?? ""),
+      "videoUrl" => (string)($c["video_url"] ?? ""),
+      "teacherName" => (string)($c["teacher_name"] ?? ""),
+      "lessonsCount" => (int)($c["total_lessons"] ?? 0),
+      "durationWeeks" => $c["duration_weeks"] !== null ? (int)$c["duration_weeks"] : null,
+      "durationHours" => $c["duration_hours"] !== null ? (float)$c["duration_hours"] : null,
+      "price" => $price,
+      "isFree" => ($price <= 0),
+      "learnPoints" => $learnPoints,
+    ],
+  ]);
+} catch (Throwable $e) {
+  respond(500, ["ok"=>false, "error"=>"Server error"]);
+}
+
+list.php
+<?php
+declare(strict_types=1);
+
+require __DIR__ . "/../../config/db.php";
+
+header("Content-Type: application/json; charset=utf-8");
+
+function respond(int $code, array $payload): void {
+  http_response_code($code); 
+  echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+  exit;
+}
+
+try {
+  
+  $stmt = $pdo->prepare("
+    SELECT
+      id,
+      title,
+      description,
+      category,
+      difficulty,
+      total_lessons,
+      thumbnail_url,
+      price
+    FROM courses
+    ORDER BY id DESC
+  ");
+  $stmt->execute(); 
+  $rows = $stmt->fetchAll(PDO::FETCH_ASSOC); 
+
+  $courses = [];
+  foreach ($rows as $r) {
+    $price = $r["price"] ?? null;
+    $isFree = ($price === null) ? true : ((float)$price <= 0);
+
+    $courses[] = [
+      "id" => (int)$r["id"],
+      "title" => (string)$r["title"],
+      "description" => (string)($r["description"] ?? ""),
+      "category" => (string)($r["category"] ?? ""),
+      "difficulty" => (string)($r["difficulty"] ?? ""),
+      "lessonsCount" => (int)($r["total_lessons"] ?? 0),
+      "image" => (string)($r["thumbnail_url"] ?? ""),
+      "price" => $price === null ? null : (float)$price,
+      "isFree" => $isFree
+    ];
+  }
+
+  respond(200, ["ok" => true, "courses" => $courses]);
+} catch (Throwable $e) {
+  respond(500, ["ok" => false, "error" => "Server error"]);
+}
+
+mine.php
+<?php
+declare(strict_types=1);
+
+require __DIR__ . "/../auth/guard.php"; 
+require __DIR__ . "/../_lib/json.php";
+require __DIR__ . "/../_lib/db.php";
+
+$userId = (int)($_SESSION['user_id'] ?? 0);
+$role = (string)($_SESSION['role'] ?? '');
+
+if ($userId <= 0) json_error("Unauthorized", 401);
+if (!in_array($role, ["teacher", "admin"], true)) json_error("Forbidden", 403);
+
+try {
+
+  $stmt = $pdo->prepare("
+    SELECT id, title
+    FROM courses
+    WHERE teacher_id = ?
+    ORDER BY id DESC
+  ");
+  $stmt->execute([$userId]);
+
+  $courses = [];
+  while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $courses[] = [
+      "id" => (int)$row["id"],
+      "title" => (string)$row["title"],
+    ];
+  }
+
+  json_ok(["ok" => true, "courses" => $courses]);
+
+} catch (Throwable $e) {
+  json_error("Server error", 500);
+}
+
+review.php
+<?php
+declare(strict_types=1);
+
+session_start();
+require __DIR__ . "/../../config/db.php";
+
+header("Content-Type: application/json; charset=utf-8");
+
+function respond(int $code, array $payload): void {
+  http_response_code($code); 
+  echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+  exit;
+}
+
+if (empty($_SESSION["user_id"])) {
+  respond(401, ["ok" => false, "error" => "Not logged in"]);
+}
+
+$userId = (int)$_SESSION["user_id"];
+$courseId = (int)($_GET["courseId"] ?? 0);
+if ($courseId <= 0) {
+  respond(400, ["ok" => false, "error" => "Invalid courseId"]);
+}
+
+try {
+
+  $stmt = $pdo->prepare("
+    SELECT id, title, thumbnail_url, difficulty, total_lessons
+    FROM courses
+    WHERE id = ?
+    LIMIT 1
+  ");
+  $stmt->execute([$courseId]); 
+  $course = $stmt->fetch();
+  if (!$course) respond(404, ["ok" => false, "error" => "Course not found"]);
+
+  
+  $en = $pdo->prepare("SELECT enrolled_at FROM enrollments WHERE user_id = ? AND course_id = ? LIMIT 1");
+  $en->execute([$userId, $courseId]);
+  $enRow = $en->fetch();
+  if (!$enRow) respond(403, ["ok" => false, "error" => "Not enrolled"]);
+
+  
+  $lessons = [];
+  $hasLessonsTable = true;
+
+  try {
+    $ls = $pdo->prepare("
+      SELECT id, title, type, duration_minutes
+      FROM course_lessons
+      WHERE course_id = ?
+      ORDER BY id ASC
+    ");
+    $ls->execute([$courseId]);
+    $lessonRows = $ls->fetchAll();
+
+  
+    foreach ($lessonRows as $r) {
+      $lessons[] = [
+        "id" => (int)$r["id"],
+        "title" => (string)$r["title"],
+        "type" => (string)($r["type"] ?? "video"),
+        "durationMinutes" => $r["duration_minutes"] !== null ? (int)$r["duration_minutes"] : null,
+        "completed" => false
+      ];
+    }
+
+    
+    try {
+      $pr = $pdo->prepare("
+        SELECT lesson_id
+        FROM lesson_progress
+        WHERE user_id = ? AND course_id = ? AND completed = 1
+      ");
+      $pr->execute([$userId, $courseId]);
+      $done = array_flip(array_map(fn($x) => (int)$x["lesson_id"], $pr->fetchAll()));
+      foreach ($lessons as &$l) {
+        $l["completed"] = isset($done[$l["id"]]);
+      }
+      unset($l);
+    } catch (Throwable $e) {
+  
+    }
+  } catch (Throwable $e) {
+    $hasLessonsTable = false;
+  }
+
+  if (!$hasLessonsTable) {
+   
+    $n = (int)($course["total_lessons"] ?? 0);
+    for ($i = 1; $i <= max(0, $n); $i++) {
+      $lessons[] = [
+        "id" => $i,
+        "title" => "Lesson " . $i,
+        "type" => "video",
+        "durationMinutes" => null,
+        "completed" => true
+      ];
+    }
+  }
+
+  
+  $exam = ["attempted" => false];
+  try {
+    $ex = $pdo->prepare("
+      SELECT exam_name, score_percent, correct, total_questions, taken_at
+      FROM exam_attempts
+      WHERE user_id = ? AND course_id = ?
+      ORDER BY taken_at DESC
+      LIMIT 1
+    ");
+    $ex->execute([$userId, $courseId]);
+    $exRow = $ex->fetch();
+    if ($exRow) {
+      $exam = [
+        "attempted" => true,
+        "name" => (string)($exRow["exam_name"] ?? "Final Exam"),
+        "scorePercent" => (int)($exRow["score_percent"] ?? 0),
+        "correct" => (int)($exRow["correct"] ?? 0),
+        "totalQuestions" => (int)($exRow["total_questions"] ?? 0),
+        "takenAt" => (string)($exRow["taken_at"] ?? ""),
+        "message" => ""
+      ];
+    }
+  } catch (Throwable $e) {
+  
+  }
+
+  respond(200, [
+    "ok" => true,
+    "course" => [
+      "id" => (int)$course["id"],
+      "title" => (string)$course["title"],
+      "image" => (string)($course["thumbnail_url"] ?: ""),
+      "difficulty" => (string)($course["difficulty"] ?: ""),
+      "lessonsCount" => (int)($course["total_lessons"] ?? 0),
+      "completedOn" => null
+    ],
+    "lessons" => $lessons,
+    "exam" => $exam
+  ]);
+} catch (Throwable $e) {
+  respond(500, ["ok" => false, "error" => "Server error"]);
+}
+
+update.php
+<?php
+
+declare(strict_types=1);
+
+session_start();
+require __DIR__ . "/../../config/db.php";
+
+header("Content-Type: application/json; charset=utf-8");
+
+function respond(int $code, array $payload): void
+{
+  http_response_code($code);
+  echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+  exit;
+}
+
+if ($_SERVER["REQUEST_METHOD"] !== "POST") respond(405, ["ok" => false, "error" => "Method not allowed"]);
+if (empty($_SESSION["user_id"])) respond(401, ["ok" => false, "error" => "Not logged in"]);
+
+$instructorId = (int)$_SESSION["user_id"];
+
+$courseId = (int)($_POST["course_id"] ?? 0);
+$title = trim((string)($_POST["title"] ?? ""));
+$category = trim((string)($_POST["category"] ?? ""));
+$description = trim((string)($_POST["description"] ?? ""));
+$difficulty = trim((string)($_POST["difficulty"] ?? "Beginner"));
+$totalLessons = (int)($_POST["lessons"] ?? 0);
+$durationHours = ($_POST["duration"] ?? "") === "" ? null : (float)$_POST["duration"];
+$isFree = ((string)($_POST["is_free"] ?? "0") === "1");
+$price = (float)($_POST["price"] ?? 0);
+if ($isFree) $price = 0.0;
+
+if ($courseId <= 0) respond(400, ["ok" => false, "error" => "Invalid course_id"]);
+if ($title === "" || $category === "" || $description === "") respond(400, ["ok" => false, "error" => "Title, category, description required"]);
+if ($totalLessons <= 0) respond(400, ["ok" => false, "error" => "Total lessons must be at least 1"]);
+if (!in_array($difficulty, ["Beginner", "Intermediate", "Advanced"], true)) $difficulty = "Beginner";
+
+try {
+  $chk = $pdo->prepare("SELECT thumbnail_url FROM courses WHERE id = ? AND instructor_id = ? LIMIT 1");
+  $chk->execute([$courseId, $instructorId]);
+  $row = $chk->fetch();
+  if (!$row) respond(403, ["ok" => false, "error" => "Not allowed"]);
+
+  $thumbnailUrl = (string)($row["thumbnail_url"] ?? "");
+
+
+  if (isset($_FILES["thumbnail"]) && is_array($_FILES["thumbnail"]) && ($_FILES["thumbnail"]["error"] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+    if (($_FILES["thumbnail"]["error"] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
+      respond(400, ["ok" => false, "error" => "Thumbnail upload failed"]);
+    }
+
+    $origName = (string)$_FILES["thumbnail"]["name"];
+    $tmp = (string)$_FILES["thumbnail"]["tmp_name"];
+    $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+    $allowed = ["jpg", "jpeg", "png", "webp"];
+    if (!in_array($ext, $allowed, true)) respond(400, ["ok" => false, "error" => "Thumbnail must be JPG/PNG/WEBP"]);
+
+    $uploadDir = __DIR__ . "/../../uploads/course_thumbs";
+    if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+
+    $safeName = "course_" . time() . "_" . bin2hex(random_bytes(6)) . "." . $ext;
+    $dest = $uploadDir . "/" . $safeName;
+
+    if (!move_uploaded_file($tmp, $dest)) { 
+      respond(500, ["ok" => false, "error" => "Failed to save thumbnail"]);
+    }
+    $thumbnailUrl = "/proj/uploads/course_thumbs/" . $safeName;
+  }
+
+  
+  $upd = $pdo->prepare("
+    UPDATE courses
+    SET
+      title = ?,
+      category = ?,
+      description = ?,
+      difficulty = ?,
+      total_lessons = ?,
+      duration_hours = ?,
+      price = ?,
+      thumbnail_url = ?
+    WHERE id = ? AND instructor_id = ?
+  ");
+  $upd->execute([
+    $title,
+    $category,
+    $description,
+    $difficulty,
+    $totalLessons,
+    $durationHours,
+    $price,
+    $thumbnailUrl,
+    $courseId,
+    $instructorId
+  ]);
+
+  respond(200, ["ok" => true, "courseId" => $courseId, "thumbnailUrl" => $thumbnailUrl]);
+} catch (Throwable $e) {
+  respond(500, ["ok" => false, "error" => "Server error"]);
+}
+=======================================================
+Folder: discounts
+
+list.php
+<?php
+declare(strict_types=1);
+
+require __DIR__ . "/../../config/db.php";
+
+header("Content-Type: application/json; charset=utf-8");
+
+function respond(int $code, array $payload): void {
+  http_response_code($code); 
+  echo json_encode($payload, JSON_UNESCAPED_UNICODE); 
+  exit;
+}
+
+try {
+  
+  $sql = "
+    SELECT
+      c.id,
+      c.title,
+      c.description,
+      c.category,
+      c.difficulty,
+      c.thumbnail_url,
+      c.price AS original_price,
+      COALESCE(d.discount_percent, 0) AS discount_percent
+    FROM courses c
+    LEFT JOIN course_discounts d
+      ON d.course_id = c.id
+      AND d.active = 1
+      AND (d.starts_at IS NULL OR d.starts_at <= NOW())
+      AND (d.ends_at IS NULL OR d.ends_at >= NOW())
+    WHERE (c.price <= 0) OR (COALESCE(d.discount_percent, 0) > 0)
+    ORDER BY (c.price <= 0) DESC, discount_percent DESC, c.id DESC
+  ";
+
+  $stmt = $pdo->prepare($sql);
+  $stmt->execute();
+  $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+  $courses = [];
+  foreach ($rows as $r) {
+    $orig = (float)($r["original_price"] ?? 0);
+    $disc = (float)($r["discount_percent"] ?? 0);
+    $isFree = $orig <= 0;
+
+    $discounted = $isFree ? 0 : max(0, round($orig - ($orig * $disc / 100), 2));
+
+    $courses[] = [
+      "id" => (int)$r["id"],
+      "title" => (string)$r["title"],
+      "description" => (string)($r["description"] ?? ""),
+      "category" => (string)($r["category"] ?? ""),
+      "difficulty" => (string)($r["difficulty"] ?? ""),
+      "isFree" => $isFree,
+      "originalPrice" => $isFree ? 0 : $orig,
+      "discountPercent" => $isFree ? 0 : $disc,
+      "discountedPrice" => $isFree ? 0 : $discounted,
+      "image" => (string)($r["thumbnail_url"] ?? ""),
+    ];
+  }
+
+  respond(200, ["ok" => true, "courses" => $courses]);
+} catch (Throwable $e) {
+  respond(500, ["ok" => false, "error" => "Server error"]);
+}
+=======================================================
+Folder: enrollments
+status.php
+<?php
+declare(strict_types=1);
+
+session_start();
+require __DIR__ . "/../../config/db.php";
+
+header("Content-Type: application/json; charset=utf-8");
+
+function respond(int $code, array $payload): void {
+  http_response_code($code);
+  echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+  exit;
+}
+
+if (empty($_SESSION["user_id"])) {
+  respond(401, ["ok" => false, "error" => "Not logged in"]);
+}
+
+$courseId = (int)($_GET["courseId"] ?? 0);
+if ($courseId <= 0) respond(400, ["ok" => false, "error" => "Invalid courseId"]);
+
+$userId = (int)$_SESSION["user_id"];
+
+$stmt = $pdo->prepare("SELECT 1 FROM enrollments WHERE user_id = ? AND course_id = ? LIMIT 1");
+$stmt->execute([$userId, $courseId]);
+$enrolled = (bool)$stmt->fetch();
+
+respond(200, ["ok" => true, "enrolled" => $enrolled]);
+=======================================================
+Folder: exams
+get.php
+<?php
+declare(strict_types=1);
+session_start();
+
+require __DIR__ . "/../../config/db.php"; 
+
+header("Content-Type: application/json; charset=utf-8");
+function respond(int $code, array $payload): void {
+  http_response_code($code);
+  echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+  exit;
+}
+
+if (empty($_SESSION["user_id"])) respond(401, ["ok"=>false, "error"=>"Not logged in"]);
+$userId = (int)$_SESSION["user_id"];
+
+$courseId = (int)($_GET["courseId"] ?? $_GET["id"] ?? 0);
+$difficulty = strtolower((string)($_GET["difficulty"] ?? "easy"));
+
+if ($courseId <= 0) respond(400, ["ok"=>false, "error"=>"Invalid courseId"]);
+
+try {
+  $ex = $pdo->prepare("
+    SELECT id, title, duration_minutes, passing_score, attempts_allowed
+    FROM exams
+    WHERE course_id = ?
+    LIMIT 1
+  ");
+  $ex->execute([$courseId]);
+  $exam = $ex->fetch(PDO::FETCH_ASSOC);
+  if (!$exam) respond(404, ["ok"=>false, "error"=>"No exam configured for this course"]);
+
+  $examId = (int)$exam["id"];
+
+  $usedStmt = $pdo->prepare("
+    SELECT COUNT(*) AS cnt
+    FROM exam_attempts
+    WHERE exam_id = ? AND user_id = ? AND submitted_at IS NOT NULL
+  ");
+  $usedStmt->execute([$examId, $userId]);
+  $attemptsUsed = (int)($usedStmt->fetch(PDO::FETCH_ASSOC)["cnt"] ?? 0);
+
+ 
+  $qStmt = $pdo->prepare("
+    SELECT id, question_text
+    FROM exam_questions
+    WHERE exam_id = ?
+    ORDER BY sort_order ASC, id ASC
+  ");
+  $qStmt->execute([$examId]);
+  $qs = $qStmt->fetchAll(PDO::FETCH_ASSOC);
+
+ 
+  $cStmt = $pdo->prepare("
+    SELECT id, choice_label, choice_text
+    FROM exam_choices
+    WHERE question_id = ?
+    ORDER BY id ASC
+  ");
+
+  $questions = [];
+  foreach ($qs as $q) {
+    $qid = (int)$q["id"];
+    $cStmt->execute([$qid]);
+    $choicesRaw = $cStmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $choices = [];
+    foreach ($choicesRaw as $c) {
+      $choices[] = [
+        "id" => (int)$c["id"],
+        "label" => (string)($c["choice_label"] ?? ""),
+        "text" => (string)($c["choice_text"] ?? ""),
+      ];
+    }
+
+    $questions[] = [
+      "id" => $qid,
+      "text" => (string)($q["question_text"] ?? ""),
+      "choices" => $choices,
+    ];
+  }
+
+
+  respond(200, [
+    "ok" => true,
+    "difficulty" => $difficulty,
+    "attemptsUsed" => $attemptsUsed,
+    "exam" => [
+      "id" => $examId,
+      "title" => (string)($exam["title"] ?? "Final Exam"),
+      "durationMinutes" => (int)($exam["duration_minutes"] ?? 0),
+      "passingScore" => (float)($exam["passing_score"] ?? 50),
+      "attemptsAllowed" => (int)($exam["attempts_allowed"] ?? 1),
+      "questions" => $questions,
+    ],
+  ]);
+
+} catch (Throwable $e) {
+  respond(500, ["ok"=>false, "error"=>"Server error"]);
+}
+
+result.php
+<?php
+declare(strict_types=1);
+
+session_start();
+require __DIR__ . "/../../config/db.php";
+
+
+header("Content-Type: application/json; charset=utf-8");
+
+function respond(int $code, array $payload): void {
+  http_response_code($code);
+  echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+  exit;
+}
+
+$userId = (int)($_SESSION["user_id"] ?? 0);
+if ($userId <= 0) respond(401, ["ok" => false, "error" => "Not logged in"]);
+
+$attemptId = (int)($_GET["attemptId"] ?? $_GET["attemptid"] ?? $_GET["attempt_id"] ?? 0);
+if ($attemptId <= 0) respond(400, ["ok" => false, "error" => "attemptId is required"]);
+
+try {
+  
+  $stmt = $pdo->prepare("
+    SELECT
+      a.id AS attempt_id,
+      a.exam_id,
+      a.user_id,
+      COALESCE(a.score_percent, 0) AS score_percent,
+      COALESCE(a.correct, 0) AS correct_cnt,
+      COALESCE(a.incorrect, 0) AS incorrect_cnt,
+      COALESCE(a.total, 0) AS total_cnt,
+      e.title AS exam_title,
+      e.course_id,
+      c.title AS course_title
+    FROM exam_attempts a
+    JOIN exams e   ON e.id = a.exam_id
+    JOIN courses c ON c.id = e.course_id
+    WHERE a.id = ? AND a.user_id = ?
+    LIMIT 1
+  ");
+  $stmt->execute([$attemptId, $userId]);
+  $meta = $stmt->fetch(PDO::FETCH_ASSOC);
+
+  if (!$meta) respond(404, ["ok" => false, "error" => "Result not found"]);
+
+  $examId = (int)$meta["exam_id"];
+
+ 
+  $rowsStmt = $pdo->prepare("
+    SELECT
+      q.id AS question_id,
+      q.question_text,
+      q.sort_order,
+      ch.id AS choice_id,
+      ch.choice_label,
+      ch.choice_text,
+      COALESCE(ch.is_correct, 0) AS is_correct,
+      aa.choice_id AS chosen_choice_id
+    FROM exam_questions q
+    JOIN exam_choices ch
+      ON ch.question_id = q.id
+    LEFT JOIN exam_attempt_answers aa
+      ON aa.attempt_id = ? AND aa.question_id = q.id
+    WHERE q.exam_id = ?
+    ORDER BY q.sort_order ASC, q.id ASC, ch.id ASC
+  ");
+  $rowsStmt->execute([$attemptId, $examId]);
+  $rows = $rowsStmt->fetchAll(PDO::FETCH_ASSOC);
+
+ 
+  $questions = [];
+  foreach ($rows as $r) {
+    $qid = (int)$r["question_id"];
+    if (!isset($questions[$qid])) {
+      $questions[$qid] = [
+        "id" => $qid,
+        "text" => (string)($r["question_text"] ?? ""),
+        "explanation" => "", 
+        "isCorrect" => false,
+        "options" => []
+      ];
+    }
+
+    $choiceId = (int)$r["choice_id"];
+    $chosenId = (int)($r["chosen_choice_id"] ?? 0);
+    $isCorrectChoice = ((int)$r["is_correct"] === 1);
+    $isChosen = ($chosenId > 0 && $chosenId === $choiceId);
+
+    if ($isChosen && $isCorrectChoice) {
+      $questions[$qid]["isCorrect"] = true;
+    }
+
+    $questions[$qid]["options"][] = [
+      "id" => $choiceId,
+      "label" => (string)($r["choice_label"] ?? ""),
+      "text" => (string)($r["choice_text"] ?? ""),
+      "isCorrect" => $isCorrectChoice,
+      "isChosen" => $isChosen
+    ];
+  }
+
+  $questionsList = array_values($questions);
+
+ 
+  $total = (int)$meta["total_cnt"];
+  $correct = (int)$meta["correct_cnt"];
+  $incorrect = (int)$meta["incorrect_cnt"];
+  $score = (float)$meta["score_percent"];
+
+  if ($total <= 0) {
+    $totalStmt = $pdo->prepare("SELECT COUNT(*) AS cnt FROM exam_questions WHERE exam_id = ?");
+    $totalStmt->execute([$examId]);
+    $total = (int)($totalStmt->fetch(PDO::FETCH_ASSOC)["cnt"] ?? 0);
+  }
+
+  if ($total > 0 && ($correct === 0 && $incorrect === 0 && $score == 0.0)) {
+    $corrStmt = $pdo->prepare("
+      SELECT COUNT(*) AS cnt
+      FROM exam_attempt_answers aa
+      JOIN exam_choices ch ON ch.id = aa.choice_id
+      JOIN exam_questions q ON q.id = aa.question_id
+      WHERE aa.attempt_id = ? AND q.exam_id = ? AND ch.is_correct = 1
+    ");
+    $corrStmt->execute([$attemptId, $examId]);
+    $correct = (int)($corrStmt->fetch(PDO::FETCH_ASSOC)["cnt"] ?? 0);
+    $incorrect = max(0, $total - $correct);
+    $score = round(($correct / $total) * 100, 2);
+  }
+
+  $remark = ($score >= 80) ? "Excellent! Keep it up."
+          : (($score >= 50) ? "Good effort. Keep practicing."
+          : "Needs improvement. Review the lessons.");
+
+  respond(200, [
+    "ok" => true,
+    "result" => [
+      "attemptId" => (int)$meta["attempt_id"],
+      "examId" => (int)$meta["exam_id"],
+      "examTitle" => (string)$meta["exam_title"],
+      "courseId" => (int)$meta["course_id"],
+      "courseTitle" => (string)$meta["course_title"],
+      "scorePercent" => (int)round((float)$score),
+      "remark" => $remark,
+      "correct" => $correct,
+      "incorrect" => $incorrect,
+      "total" => $total,
+      "questions" => $questionsList
+    ]
+  ]);
+} catch (Throwable $e) {
+  respond(500, ["ok" => false, "error" => "Server error"]);
+}
+
+retake.php
+<?php
+declare(strict_types=1);
+
+require __DIR__ . "/../auth/guard.php"; 
+require __DIR__ . "/../_lib/json.php";
+require __DIR__ . "/../_lib/db.php";
+
+$userId = (int)($_SESSION['user_id'] ?? 0);
+$role = (string)($_SESSION['role'] ?? '');
+
+if ($userId <= 0) json_error("Unauthorized", 401);
+if (!in_array($role, ["teacher", "admin"], true)) json_error("Forbidden", 403);
+
+try {
+  $stmt = $pdo->prepare("
+    SELECT id, title
+    FROM courses
+    WHERE teacher_id = ?
+    ORDER BY id DESC
+  ");
+  $stmt->execute([$userId]);
+
+  $courses = [];
+  while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $courses[] = [
+      "id" => (int)$row["id"],
+      "title" => (string)$row["title"],
+    ];
+  }
+
+  json_ok(["ok" => true, "courses" => $courses]);
+
+} catch (Throwable $e) {
+  json_error("Server error", 500);
+}
+
+save-answer.php
+<?php
+declare(strict_types=1);
+
+session_start();
+require __DIR__ . "/../../config/db.php";
+
+header("Content-Type: application/json; charset=utf-8");
+
+function respond(int $code, array $payload): void {
+  http_response_code($code);
+  echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+  exit;
+}
+
+if (empty($_SESSION["user_id"])) respond(401, ["ok"=>false,"error"=>"Not logged in"]);
+$userId = (int)$_SESSION["user_id"];
+
+$body = json_decode(file_get_contents("php://input"), true);
+$attemptId = (int)($body["attemptId"] ?? 0);
+$questionId = (int)($body["questionId"] ?? 0);
+$choiceId = (int)($body["choiceId"] ?? 0);
+if ($attemptId<=0 || $questionId<=0 || $choiceId<=0) respond(400, ["ok"=>false,"error"=>"Invalid payload"]);
+
+try {
+  $chk = $pdo->prepare("SELECT ends_at, submitted_at FROM exam_attempts WHERE id = ? AND user_id = ? LIMIT 1");
+  $chk->execute([$attemptId, $userId]);
+  $a = $chk->fetch();
+  if (!$a) respond(403, ["ok"=>false,"error"=>"Not allowed"]);
+  if (!empty($a["submitted_at"])) respond(400, ["ok"=>false,"error"=>"Attempt already submitted"]);
+
+
+  if (time() > strtotime((string)$a["ends_at"])) respond(400, ["ok"=>false,"error"=>"Time over"]);
+
+
+  $ins = $pdo->prepare("
+    INSERT INTO exam_attempt_answers (attempt_id, question_id, choice_id)
+    VALUES (?, ?, ?)
+    ON DUPLICATE KEY UPDATE choice_id = VALUES(choice_id)
+  ");
+  $ins->execute([$attemptId, $questionId, $choiceId]);
+
+  respond(200, ["ok"=>true]);
+} catch (Throwable $e) {
+  respond(500, ["ok"=>false,"error"=>"Server error"]);
+}
+
+start.php
+<?php
+declare(strict_types=1);
+session_start();
+require __DIR__ . "/../../config/db.php";
+
+header("Content-Type: application/json; charset=utf-8");
+
+function respond(int $code, array $payload): void {
+  http_response_code($code);
+  echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+  exit;
+}
+
+if (empty($_SESSION["user_id"])) respond(401, ["ok"=>false, "error"=>"Not logged in"]);
+$userId = (int)$_SESSION["user_id"];
+
+$body = json_decode(file_get_contents("php://input"), true) ?: [];
+$courseId = (int)($body["courseId"] ?? 0);
+$difficulty = strtolower((string)($body["difficulty"] ?? "easy")); // optional
+
+if ($courseId <= 0) respond(400, ["ok"=>false, "error"=>"Invalid courseId"]);
+
+try {
+  $ex = $pdo->prepare("SELECT id, duration_minutes, attempts_allowed FROM exams WHERE course_id = ? LIMIT 1");
+  $ex->execute([$courseId]);
+  $exam = $ex->fetch(PDO::FETCH_ASSOC);
+  if (!$exam) respond(404, ["ok"=>false, "error"=>"No exam configured for this course"]);
+
+  $examId = (int)$exam["id"];
+
+  $usedStmt = $pdo->prepare("
+    SELECT COUNT(*) AS cnt
+    FROM exam_attempts
+    WHERE exam_id = ? AND user_id = ? AND submitted_at IS NOT NULL
+  ");
+  $usedStmt->execute([$examId, $userId]);
+  $used = (int)($usedStmt->fetch(PDO::FETCH_ASSOC)["cnt"] ?? 0);
+
+  if ($used >= (int)$exam["attempts_allowed"]) {
+    respond(403, ["ok"=>false, "error"=>"No attempts left"]);
+  }
+
+  $resume = $pdo->prepare("
+    SELECT id, ends_at
+    FROM exam_attempts
+    WHERE exam_id = ? AND user_id = ? AND submitted_at IS NULL
+    ORDER BY id DESC
+    LIMIT 1
+  ");
+  $resume->execute([$examId, $userId]);
+  $attempt = $resume->fetch(PDO::FETCH_ASSOC);
+
+  if ($attempt) {
+    $attemptId = (int)$attempt["id"];
+    $endsAt = (string)$attempt["ends_at"];
+  } else {
+    $startedAt = (new DateTime("now"))->format("Y-m-d H:i:s");
+    $endsAt = (new DateTime("now"))
+      ->modify("+" . (int)$exam["duration_minutes"] . " minutes")
+      ->format("Y-m-d H:i:s");
+
+    $ins = $pdo->prepare("INSERT INTO exam_attempts (exam_id, user_id, started_at, ends_at) VALUES (?, ?, ?, ?)");
+    $ins->execute([$examId, $userId, $startedAt, $endsAt]);
+    $attemptId = (int)$pdo->lastInsertId();
+  }
+
+  $aStmt = $pdo->prepare("SELECT question_id, choice_id FROM exam_attempt_answers WHERE attempt_id = ?");
+  $aStmt->execute([$attemptId]);
+
+  $answers = [];
+  foreach ($aStmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
+    $answers[(int)$r["question_id"]] = (int)$r["choice_id"];
+  }
+
+  $endsIso = (new DateTime($endsAt))->format(DateTime::ATOM);
+  respond(200, ["ok"=>true, "attemptId"=>$attemptId, "endsAt"=>$endsIso, "answers"=>$answers, "difficulty"=>$difficulty]);
+
+} catch (Throwable $e) {
+  respond(500, ["ok"=>false, "error"=>"Server error"]);
+}
+
+submit.php
+<?php
+
+declare(strict_types=1);
+
+session_start();
+require __DIR__ . "/../../config/db.php";
+
+header("Content-Type: application/json; charset=utf-8");
+
+function respond(int $code, array $payload): void
+{
+  http_response_code($code);
+  echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+  exit;
+}
+
+if (empty($_SESSION["user_id"])) respond(401, ["ok" => false, "error" => "Not logged in"]);
+$userId = (int)$_SESSION["user_id"];
+
+$body = json_decode(file_get_contents("php://input"), true);
+$attemptId = (int)($body["attemptId"] ?? 0);
+if ($attemptId <= 0) respond(400, ["ok" => false, "error" => "Invalid attemptId"]);
+
+try {
+  $aStmt = $pdo->prepare("SELECT exam_id, submitted_at FROM exam_attempts WHERE id = ? AND user_id = ? LIMIT 1");
+  $aStmt->execute([$attemptId, $userId]);
+  $attempt = $aStmt->fetch();
+  if (!$attempt) respond(403, ["ok" => false, "error" => "Not allowed"]);
+  if (!empty($attempt["submitted_at"])) respond(200, ["ok" => true, "attemptId" => $attemptId]); // already submitted
+
+  $examId = (int)$attempt["exam_id"];
+
+  $tStmt = $pdo->prepare("SELECT COUNT(*) AS cnt FROM exam_questions WHERE exam_id = ?");
+  $tStmt->execute([$examId]);
+  $total = (int)($tStmt->fetch()["cnt"] ?? 0);
+  if ($total <= 0) respond(400, ["ok" => false, "error" => "Exam has no questions"]);
+
+
+  $correctStmt = $pdo->prepare("
+    SELECT COUNT(*) AS correct_cnt
+    FROM exam_attempt_answers aa
+    INNER JOIN exam_choices ch ON ch.id = aa.choice_id
+    INNER JOIN exam_questions q ON q.id = aa.question_id
+    WHERE aa.attempt_id = ?
+      AND q.exam_id = ?
+      AND ch.is_correct = 1
+  ");
+  $correctStmt->execute([$attemptId, $examId]);
+  $correct = (int)($correctStmt->fetch()["correct_cnt"] ?? 0);
+
+  $scorePercent = round(($correct / $total) * 100, 2);
+
+  $passStmt = $pdo->prepare("SELECT passing_score FROM exams WHERE id = ? LIMIT 1");
+  $passStmt->execute([$examId]);
+  $passing = (float)($passStmt->fetch()["passing_score"] ?? 50);
+  $passed = ($scorePercent >= $passing) ? 1 : 0;
+
+  $now = (new DateTime("now"))->format("Y-m-d H:i:s");
+  $upd = $pdo->prepare("UPDATE exam_attempts SET submitted_at = ?, score_percent = ?, passed = ? WHERE id = ? AND user_id = ?");
+  $upd->execute([$now, $scorePercent, $passed, $attemptId, $userId]);
+
+  respond(200, [
+    "ok" => true,
+    "attemptId" => $attemptId,
+    "scorePercent" => $scorePercent,
+    "correct" => $correct,
+    "total" => $total,
+    "passed" => (bool)$passed
+  ]);
+} catch (Throwable $e) {
+  respond(500, ["ok" => false, "error" => "Server error"]);
+}
+
+=======================================================
+Folder: _lib
+json.php
+<?php
+declare(strict_types=1);
+
+function json_ok(array $data = [], int $code = 200): void {
+  header('Content-Type: application/json; charset=utf-8');
+  http_response_code($code);
+  echo json_encode($data, JSON_UNESCAPED_UNICODE);
+  exit;
+}
+
+function json_error(string $message, int $code = 400, array $extra = []): void {
+  json_ok(array_merge(['ok' => false, 'error' => $message], $extra), $code);
+}
+=======================================================
+Folder: purchases
+
+buy.php
+<?php
+
+declare(strict_types=1);
+
+session_start();
+require __DIR__ . "/../../config/db.php";
+
+header("Content-Type: application/json; charset=utf-8");
+
+function respond(int $code, array $payload): void
+{
+  http_response_code($code);
+  echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+  exit;
+}
+
+if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+  respond(405, ["ok" => false, "error" => "Method not allowed"]);
+}
+if (empty($_SESSION["user_id"])) {
+  respond(401, ["ok" => false, "error" => "Not logged in"]);
+}
+
+$raw = file_get_contents("php://input");
+$data = json_decode($raw, true);
+$courseId = (int)($data["courseId"] ?? 0);
+if ($courseId <= 0) respond(400, ["ok" => false, "error" => "Invalid courseId"]);
+
+$userId = (int)$_SESSION["user_id"];
+
+try {
+
+  $chk = $pdo->prepare("SELECT id FROM courses WHERE id = ? LIMIT 1");
+  $chk->execute([$courseId]);
+  if (!$chk->fetch()) respond(404, ["ok" => false, "error" => "Course not found"]);
+
+
+  $ins = $pdo->prepare("INSERT IGNORE INTO enrollments (user_id, course_id) VALUES (?, ?)");
+  $ins->execute([$userId, $courseId]);
+
+  respond(200, ["ok" => true, "enrolled" => true]);
+} catch (Throwable $e) {
+  respond(500, ["ok" => false, "error" => "Server error"]);
+}
+
+=======================================================
+Folder: reviews
+by-course.php
+<?php
+
+declare(strict_types=1);
+
+require __DIR__ . "/../auth/guard.php";
+require __DIR__ . "/../_lib/json.php";
+require __DIR__ . "/../_lib/db.php";
+
+$userId = (int)($_SESSION['user_id'] ?? 0);
+$role = (string)($_SESSION['role'] ?? '');
+
+if ($userId <= 0) json_error("Unauthorized", 401);
+if (!in_array($role, ["teacher", "admin"], true)) json_error("Forbidden", 403);
+
+$courseId = isset($_GET['course_id']) ? (int)$_GET['course_id'] : 0;
+if ($courseId <= 0) json_error("course_id is required", 400);
+
+try {
+
+  $cStmt = $pdo->prepare("SELECT id, title, teacher_id FROM courses WHERE id = ? LIMIT 1");
+  $cStmt->execute([$courseId]);
+  $course = $cStmt->fetch(PDO::FETCH_ASSOC);
+  if (!$course) json_error("Course not found", 404);
+  if ($role !== "admin" && (int)$course["teacher_id"] !== $userId) json_error("Forbidden", 403);
+
+
+  $sStmt = $pdo->prepare("
+    SELECT
+      COUNT(*) AS total_reviews,
+      AVG(overall_rating) AS overall_avg,
+      AVG(content_rating) AS content_avg,
+      AVG(clarity_rating) AS clarity_avg
+    FROM course_reviews
+    WHERE course_id = ?
+  ");
+  $sStmt->execute([$courseId]);
+  $s = $sStmt->fetch(PDO::FETCH_ASSOC) ?: [];
+
+ 
+  $rStmt = $pdo->prepare("
+    SELECT
+      r.id,
+      r.overall_rating,
+      r.comment,
+      r.created_at,
+      u.name AS reviewer_name
+    FROM course_reviews r
+    JOIN users u ON u.id = r.user_id
+    WHERE r.course_id = ?
+    ORDER BY r.created_at DESC
+    LIMIT 200
+  ");
+  $rStmt->execute([$courseId]);
+
+  $reviews = [];
+  while ($row = $rStmt->fetch(PDO::FETCH_ASSOC)) {
+    $created = (string)($row["created_at"] ?? "");
+    $human = $created ? date("F j, Y", strtotime($created)) : ""; 
+
+    $reviews[] = [
+      "id" => (int)$row["id"],
+      "reviewerName" => (string)($row["reviewer_name"] ?? "Anonymous"),
+      "createdAtHuman" => $human,
+      "overallRating" => (float)($row["overall_rating"] ?? 0),
+      "comment" => (string)($row["comment"] ?? ""),
+    ];
+  }
+
+  json_ok([
+    "ok" => true,
+    "courseTitle" => (string)$course["title"],
+    "summary" => [
+      "totalReviews" => (int)($s["total_reviews"] ?? 0),
+      "overallAvg" => (float)($s["overall_avg"] ?? 0),
+      "contentAvg" => (float)($s["content_avg"] ?? 0),
+      "clarityAvg" => (float)($s["clarity_avg"] ?? 0),
+    ],
+    "reviews" => $reviews,
+  ]);
+} catch (Throwable $e) {
+  json_error("Server error", 500);
+}
+
+sample.php
+<?php
+declare(strict_types=1);
+
+require __DIR__ . "/../../config/db.php";
+header("Content-Type: application/json; charset=utf-8");
+
+function respond(int $code, array $payload): void {
+  http_response_code($code);
+  echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+  exit;
+}
+
+$courseId = (int)($_GET["courseId"] ?? 0);
+if ($courseId <= 0) respond(400, ["ok" => false, "error" => "Invalid courseId"]);
+
+$stmt = $pdo->prepare("
+  SELECT u.name, r.rating, r.comment
+  FROM course_reviews r
+  LEFT JOIN users u ON u.id = r.user_id
+  WHERE r.course_id = ?
+  ORDER BY r.created_at DESC
+  LIMIT 3
+");
+$stmt->execute([$courseId]);
+$rows = $stmt->fetchAll();
+
+$reviews = array_map(fn($r) => [
+  "name" => (string)($r["name"] ?: "Student"),
+  "rating" => (int)$r["rating"],
+  "comment" => (string)($r["comment"] ?? ""),
+], $rows);
+
+respond(200, ["ok" => true, "reviews" => $reviews]);
+
+summary.php
+<?php
+declare(strict_types=1);
+
+require __DIR__ . "/../../config/db.php";
+header("Content-Type: application/json; charset=utf-8");
+
+function respond(int $code, array $payload): void {
+  http_response_code($code);
+  echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+  exit;
+}
+
+$courseId = (int)($_GET["courseId"] ?? 0);
+if ($courseId <= 0) respond(400, ["ok" => false, "error" => "Invalid courseId"]);
+
+$stmt = $pdo->prepare("
+  SELECT AVG(rating) AS avg_rating, COUNT(*) AS ratings_count
+  FROM course_reviews
+  WHERE course_id = ?
+");
+$stmt->execute([$courseId]);
+$row = $stmt->fetch();
+
+$avg = $row && $row["avg_rating"] !== null ? (float)$row["avg_rating"] : 0.0;
+$cnt = $row ? (int)$row["ratings_count"] : 0;
+
+respond(200, ["ok" => true, "avg" => $avg, "ratings" => $cnt, "reviews" => $cnt]);
+=======================================================
+Folder: teacher
+
+courses.php
+<?php
+
+declare(strict_types=1);
+session_start();
+require __DIR__ . "/../../config/db.php";
+
+header("Content-Type: application/json; charset=utf-8");
+function respond(int $code, array $payload): void
+{
+  http_response_code($code);
+  echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+  exit;
+}
+
+if (empty($_SESSION["user_id"])) respond(401, ["ok" => false, "error" => "Not logged in"]);
+$userId = (int)$_SESSION["user_id"];
+
+try {
+
+  $stmt = $pdo->prepare("
+    SELECT id, title, category, thumbnail_url, video_url
+    FROM courses
+    WHERE instructor_id = ?
+    ORDER BY id DESC
+  ");
+  $stmt->execute([$userId]);
+
+  $courses = [];
+  while ($r = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $courses[] = [
+      "id" => (int)$r["id"],
+      "title" => (string)$r["title"],
+      "category" => (string)($r["category"] ?? ""),
+      "thumbnailUrl" => (string)($r["thumbnail_url"] ?? ""),
+      "videoUrl" => (string)($r["video_url"] ?? ""),
+    ];
+  }
+
+  respond(200, ["ok" => true, "courses" => $courses]);
+} catch (Throwable $e) {
+  respond(500, ["ok" => false, "error" => "Server error"]);
+}
+
+course-video.php
+<?php
+
+declare(strict_types=1);
+session_start();
+require __DIR__ . "/../../config/db.php";
+
+header("Content-Type: application/json; charset=utf-8");
+function respond(int $code, array $payload): void
+{
+  http_response_code($code);
+  echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+  exit;
+}
+
+if (empty($_SESSION["user_id"])) respond(401, ["ok" => false, "error" => "Not logged in"]);
+$userId = (int)$_SESSION["user_id"];
+
+$body = json_decode(file_get_contents("php://input"), true) ?: [];
+$courseId = (int)($body["courseId"] ?? 0);
+$videoUrl = trim((string)($body["videoUrl"] ?? ""));
+
+if ($courseId <= 0) respond(400, ["ok" => false, "error" => "Invalid courseId"]);
+
+if ($videoUrl !== "" && strlen($videoUrl) > 500) respond(400, ["ok" => false, "error" => "videoUrl too long"]);
+
+try {
+  $own = $pdo->prepare("SELECT id FROM courses WHERE id = ? AND instructor_id = ? LIMIT 1");
+  $own->execute([$courseId, $userId]);
+  if (!$own->fetch()) respond(403, ["ok" => false, "error" => "Not allowed"]);
+
+  $upd = $pdo->prepare("UPDATE courses SET video_url = ? WHERE id = ? AND instructor_id = ?");
+  $upd->execute([$videoUrl === "" ? null : $videoUrl, $courseId, $userId]);
+
+  respond(200, ["ok" => true]);
+} catch (Throwable $e) {
+  respond(500, ["ok" => false, "error" => "Server error"]);
+}
+
+earnings.php
+<?php
+
+declare(strict_types=1);
+
+session_start();
+require __DIR__ . "/../../config/db.php";
+
+header("Content-Type: application/json; charset=utf-8");
+
+function respond(int $code, array $payload): void
+{
+  http_response_code($code);
+  echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+  exit;
+}
+
+if (empty($_SESSION["user_id"])) {
+  respond(401, ["ok" => false, "error" => "Not logged in"]);
+}
+$instructorId = (int)$_SESSION["user_id"];
+
+
+$firstDay = (new DateTime('first day of this month 00:00:00'))->format('Y-m-d H:i:s');
+$lastDay = (new DateTime('last day of this month 23:59:59'))->format('Y-m-d H:i:s');
+
+try {
+  $q1 = $pdo->prepare("
+    SELECT
+      COALESCE(SUM(p.amount),0) AS total_earnings,
+      COUNT(p.id) AS total_sales
+    FROM payments p
+    INNER JOIN courses c ON c.id = p.course_id
+    WHERE c.instructor_id = ?
+      AND p.status IN ('paid','pending')
+  ");
+  $q1->execute([$instructorId]);
+  $agg = $q1->fetch();
+
+  $q2 = $pdo->prepare("
+    SELECT COALESCE(SUM(p.amount),0) AS month_earnings
+    FROM payments p
+    INNER JOIN courses c ON c.id = p.course_id
+    WHERE c.instructor_id = ?
+      AND p.status IN ('paid','pending')
+      AND p.created_at BETWEEN ? AND ?
+  ");
+  $q2->execute([$instructorId, $firstDay, $lastDay]);
+  $m = $q2->fetch();
+
+ 
+  $q3 = $pdo->prepare("
+    SELECT COALESCE(SUM(p.amount),0) AS pending_amount
+    FROM payments p
+    INNER JOIN courses c ON c.id = p.course_id
+    WHERE c.instructor_id = ?
+      AND p.status = 'pending'
+  ");
+  $q3->execute([$instructorId]);
+  $pend = $q3->fetch();
+
+ 
+  $q4 = $pdo->prepare("
+    SELECT
+      c.id AS course_id,
+      c.title AS course_title,
+      COUNT(DISTINCT e.user_id) AS students,
+      COALESCE(SUM(p.amount),0) AS total_earned,
+      MAX(p.status) AS max_status
+    FROM courses c
+    LEFT JOIN enrollments e ON e.course_id = c.id
+    LEFT JOIN payments p ON p.course_id = c.id
+    WHERE c.instructor_id = ?
+    GROUP BY c.id, c.title
+    ORDER BY total_earned DESC, students DESC
+  ");
+  $q4->execute([$instructorId]);
+  $rows = $q4->fetchAll();
+
+  $byCourse = [];
+  foreach ($rows as $r) {
+    $status = ($r["max_status"] === "pending") ? "Pending" : "Paid";
+    $byCourse[] = [
+      "courseId" => (int)$r["course_id"],
+      "courseTitle" => (string)$r["course_title"],
+      "students" => (int)$r["students"],
+      "totalEarned" => (float)$r["total_earned"],
+      "status" => $status
+    ];
+  }
+
+ 
+  $summary = [
+    "totalEarnings" => (float)($agg["total_earnings"] ?? 0),
+    "thisMonthEarnings" => (float)($m["month_earnings"] ?? 0),
+    "thisMonthLabel" => date('M Y'),
+    "pendingPayout" => (float)($pend["pending_amount"] ?? 0),
+    "nextPayoutLabel" => "5th of next month",
+    "totalSales" => (int)($agg["total_sales"] ?? 0)
+  ];
+
+  respond(200, ["ok" => true, "summary" => $summary, "byCourse" => $byCourse]);
+} catch (Throwable $e) {
+  respond(500, ["ok" => false, "error" => "Server error"]);
+}
+
+exam-get.php
+<?php
+declare(strict_types=1);
+session_start();
+require __DIR__ . "/../../config/db.php";
+
+header("Content-Type: application/json; charset=utf-8");
+function respond(int $code, array $payload): void {
+  http_response_code($code);
+  echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+  exit;
+}
+
+if (empty($_SESSION["user_id"])) respond(401, ["ok"=>false, "error"=>"Not logged in"]);
+$userId = (int)$_SESSION["user_id"];
+
+$courseId = (int)($_GET["courseId"] ?? 0);
+if ($courseId <= 0) respond(400, ["ok"=>false, "error"=>"Invalid courseId"]);
+
+try {
+  $own = $pdo->prepare("SELECT id FROM courses WHERE id = ? AND instructor_id = ? LIMIT 1");
+  $own->execute([$courseId, $userId]);
+  if (!$own->fetch()) respond(403, ["ok"=>false, "error"=>"Not allowed"]);
+
+  $ex = $pdo->prepare("SELECT id, title, duration_minutes, passing_score, attempts_allowed FROM exams WHERE course_id = ? LIMIT 1");
+  $ex->execute([$courseId]);
+  $exam = $ex->fetch(PDO::FETCH_ASSOC);
+
+  if (!$exam) {
+    respond(200, ["ok"=>true, "exam"=>null]);
+  }
+
+  $examId = (int)$exam["id"];
+
+  $qStmt = $pdo->prepare("
+    SELECT id, question_text, sort_order
+    FROM exam_questions
+    WHERE exam_id = ?
+    ORDER BY sort_order ASC, id ASC
+  ");
+  $qStmt->execute([$examId]);
+  $qs = $qStmt->fetchAll(PDO::FETCH_ASSOC);
+
+  $cStmt = $pdo->prepare("
+    SELECT id, choice_label, choice_text, is_correct
+    FROM exam_choices
+    WHERE question_id = ?
+    ORDER BY id ASC
+  ");
+
+  $questions = [];
+  foreach ($qs as $q) {
+    $qid = (int)$q["id"];
+    $cStmt->execute([$qid]);
+    $choicesRaw = $cStmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $choices = [];
+    foreach ($choicesRaw as $c) {
+      $choices[] = [
+        "id" => (int)$c["id"],
+        "label" => (string)$c["choice_label"],
+        "text" => (string)$c["choice_text"],
+        "isCorrect" => ((int)$c["is_correct"] === 1),
+      ];
+    }
+
+    $questions[] = [
+      "id" => $qid,
+      "text" => (string)$q["question_text"],
+      "sortOrder" => (int)$q["sort_order"],
+      "choices" => $choices,
+    ];
+  }
+
+  respond(200, [
+    "ok"=>true,
+    "exam"=>[
+      "id"=>$examId,
+      "title"=>(string)$exam["title"],
+      "durationMinutes"=>(int)$exam["duration_minutes"],
+      "passingScore"=>(float)$exam["passing_score"],
+      "attemptsAllowed"=>(int)$exam["attempts_allowed"],
+      "questions"=>$questions
+    ]
+  ]);
+} catch (Throwable $e) {
+  respond(500, ["ok"=>false, "error"=>"Server error"]);
+}
+
+exam-upsert.php
+<?php
+
+declare(strict_types=1);
+session_start();
+require __DIR__ . "/../../config/db.php";
+
+header("Content-Type: application/json; charset=utf-8");
+function respond(int $code, array $payload): void
+{
+  http_response_code($code);
+  echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+  exit;
+}
+
+if (empty($_SESSION["user_id"])) respond(401, ["ok" => false, "error" => "Not logged in"]);
+$userId = (int)$_SESSION["user_id"];
+
+$body = json_decode(file_get_contents("php://input"), true) ?: [];
+$courseId = (int)($body["courseId"] ?? 0);
+$title = trim((string)($body["title"] ?? "Final Exam"));
+$durationMinutes = (int)($body["durationMinutes"] ?? 30);
+$passingScore = (float)($body["passingScore"] ?? 50);
+$attemptsAllowed = (int)($body["attemptsAllowed"] ?? 1);
+
+if ($courseId <= 0) respond(400, ["ok" => false, "error" => "Invalid courseId"]);
+if ($durationMinutes < 1 || $durationMinutes > 300) respond(400, ["ok" => false, "error" => "Invalid durationMinutes"]);
+if ($passingScore < 0 || $passingScore > 100) respond(400, ["ok" => false, "error" => "Invalid passingScore"]);
+if ($attemptsAllowed < 1 || $attemptsAllowed > 50) respond(400, ["ok" => false, "error" => "Invalid attemptsAllowed"]);
+if ($title === "" || strlen($title) > 255) respond(400, ["ok" => false, "error" => "Invalid title"]);
+
+try {
+  $own = $pdo->prepare("SELECT id FROM courses WHERE id = ? AND instructor_id = ? LIMIT 1");
+  $own->execute([$courseId, $userId]);
+  if (!$own->fetch()) respond(403, ["ok" => false, "error" => "Not allowed"]);
+
+  $chk = $pdo->prepare("SELECT id FROM exams WHERE course_id = ? LIMIT 1");
+  $chk->execute([$courseId]);
+  $ex = $chk->fetch(PDO::FETCH_ASSOC);
+
+  if ($ex) {
+    $upd = $pdo->prepare("
+      UPDATE exams
+      SET title = ?, duration_minutes = ?, passing_score = ?, attempts_allowed = ?
+      WHERE id = ?
+    ");
+    $upd->execute([$title, $durationMinutes, $passingScore, $attemptsAllowed, (int)$ex["id"]]);
+    $examId = (int)$ex["id"];
+  } else {
+    $ins = $pdo->prepare("
+      INSERT INTO exams (course_id, title, duration_minutes, passing_score, attempts_allowed)
+      VALUES (?, ?, ?, ?, ?)
+    ");
+    $ins->execute([$courseId, $title, $durationMinutes, $passingScore, $attemptsAllowed]);
+    $examId = (int)$pdo->lastInsertId();
+  }
+
+  respond(200, ["ok" => true, "examId" => $examId]);
+} catch (Throwable $e) {
+  respond(500, ["ok" => false, "error" => "Server error"]);
+}
+
+question-delete.php
+<?php
+
+declare(strict_types=1);
+session_start();
+require __DIR__ . "/../../config/db.php";
+
+header("Content-Type: application/json; charset=utf-8");
+function respond(int $code, array $payload): void
+{
+  http_response_code($code);
+  echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+  exit;
+}
+
+if (empty($_SESSION["user_id"])) respond(401, ["ok" => false, "error" => "Not logged in"]);
+$userId = (int)$_SESSION["user_id"];
+
+$body = json_decode(file_get_contents("php://input"), true) ?: [];
+$courseId = (int)($body["courseId"] ?? 0);
+$questionId = (int)($body["questionId"] ?? 0);
+
+if ($courseId <= 0 || $questionId <= 0) respond(400, ["ok" => false, "error" => "Invalid payload"]);
+
+try {
+
+  $chk = $pdo->prepare("
+    SELECT q.id
+    FROM exam_questions q
+    JOIN exams e ON e.id = q.exam_id
+    JOIN courses c ON c.id = e.course_id
+    WHERE q.id = ? AND e.course_id = ? AND c.instructor_id = ?
+    LIMIT 1
+  ");
+  $chk->execute([$questionId, $courseId, $userId]);
+  if (!$chk->fetch()) respond(403, ["ok" => false, "error" => "Not allowed"]);
+
+  $pdo->beginTransaction();
+  $delC = $pdo->prepare("DELETE FROM exam_choices WHERE question_id = ?");
+  $delC->execute([$questionId]);
+
+  $delQ = $pdo->prepare("DELETE FROM exam_questions WHERE id = ?");
+  $delQ->execute([$questionId]);
+
+  $pdo->commit();
+  respond(200, ["ok" => true]);
+} catch (Throwable $e) {
+  if ($pdo->inTransaction()) $pdo->rollBack();
+  respond(500, ["ok" => false, "error" => "Server error"]);
+}
+
+question-create.php
+<?php
+
+declare(strict_types=1);
+session_start();
+require __DIR__ . "/../../config/db.php";
+
+header("Content-Type: application/json; charset=utf-8");
+function respond(int $code, array $payload): void
+{
+  http_response_code($code);
+  echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+  exit;
+}
+
+if (empty($_SESSION["user_id"])) respond(401, ["ok" => false, "error" => "Not logged in"]);
+$userId = (int)$_SESSION["user_id"];
+
+$body = json_decode(file_get_contents("php://input"), true) ?: [];
+$courseId = (int)($body["courseId"] ?? 0);
+$questionText = trim((string)($body["questionText"] ?? ""));
+$choices = $body["choices"] ?? [];
+
+if ($courseId <= 0) respond(400, ["ok" => false, "error" => "Invalid courseId"]);
+if ($questionText === "") respond(400, ["ok" => false, "error" => "Question text required"]);
+if (!is_array($choices) || count($choices) < 2) respond(400, ["ok" => false, "error" => "Choices required"]);
+
+$correctCount = 0;
+$seenLabels = [];
+foreach ($choices as $ch) {
+  $label = strtoupper(trim((string)($ch["label"] ?? "")));
+  $text = trim((string)($ch["text"] ?? ""));
+  $isCorrect = !empty($ch["isCorrect"]) ? 1 : 0;
+
+  if ($label === "" || strlen($label) !== 1) respond(400, ["ok" => false, "error" => "Invalid choice label"]);
+  if (isset($seenLabels[$label])) respond(400, ["ok" => false, "error" => "Duplicate choice label"]);
+  if ($text === "") respond(400, ["ok" => false, "error" => "Choice text required"]);
+
+  $seenLabels[$label] = true;
+  $correctCount += $isCorrect;
+}
+if ($correctCount !== 1) respond(400, ["ok" => false, "error" => "Exactly 1 correct choice required"]);
+
+try {
+  $own = $pdo->prepare("SELECT id FROM courses WHERE id = ? AND instructor_id = ? LIMIT 1");
+  $own->execute([$courseId, $userId]);
+  if (!$own->fetch()) respond(403, ["ok" => false, "error" => "Not allowed"]);
+
+  $ex = $pdo->prepare("SELECT id FROM exams WHERE course_id = ? LIMIT 1");
+  $ex->execute([$courseId]);
+  $exam = $ex->fetch(PDO::FETCH_ASSOC);
+  if (!$exam) respond(400, ["ok" => false, "error" => "Create exam settings first"]);
+  $examId = (int)$exam["id"];
+
+  $maxSort = $pdo->prepare("SELECT COALESCE(MAX(sort_order), 0) AS mx FROM exam_questions WHERE exam_id = ?");
+  $maxSort->execute([$examId]);
+  $nextSort = (int)($maxSort->fetch(PDO::FETCH_ASSOC)["mx"] ?? 0) + 1;
+
+  $pdo->beginTransaction();
+
+  $insQ = $pdo->prepare("INSERT INTO exam_questions (exam_id, question_text, sort_order) VALUES (?, ?, ?)");
+  $insQ->execute([$examId, $questionText, $nextSort]);
+  $questionId = (int)$pdo->lastInsertId();
+
+  $insC = $pdo->prepare("INSERT INTO exam_choices (question_id, choice_label, choice_text, is_correct) VALUES (?, ?, ?, ?)");
+  foreach ($choices as $ch) {
+    $label = strtoupper(trim((string)$ch["label"]));
+    $text = trim((string)$ch["text"]);
+    $isCorrect = !empty($ch["isCorrect"]) ? 1 : 0;
+    $insC->execute([$questionId, $label, $text, $isCorrect]);
+  }
+
+  $pdo->commit();
+  respond(200, ["ok" => true, "questionId" => $questionId]);
+} catch (Throwable $e) {
+  if ($pdo->inTransaction()) $pdo->rollBack();
+  respond(500, ["ok" => false, "error" => "Server error"]);
+}
+
+send-message.php
+<?php
+
+declare(strict_types=1);
+
+session_start();
+if (empty($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'teacher') {
+  http_response_code(401);
+  header('Content-Type: application/json; charset=utf-8'); // [web:470]
+  echo json_encode(['ok' => false, 'error' => 'Unauthorized']);
+  exit;
+}
+
+require __DIR__ . '/../_lib/json.php';
+require __DIR__ . '/../../config/db.php';
+
+$teacherId = (int)$_SESSION['user_id'];
+
+$raw = file_get_contents("php://input");
+$data = json_decode($raw, true);
+if (!is_array($data)) json_error("Invalid JSON", 400);
+
+$courseId  = (int)($data['course_id'] ?? 0);
+$studentId = (int)($data['student_id'] ?? 0);
+$msg       = trim((string)($data['message'] ?? ''));
+
+if ($courseId <= 0 || $studentId <= 0 || $msg === '') json_error("Missing data", 400);
+
+$chk = $pdo->prepare("SELECT COUNT(*) FROM courses WHERE id = ? AND instructor_id = ?");
+$chk->execute([$courseId, $teacherId]);
+if ((int)$chk->fetchColumn() !== 1) json_error("Not allowed", 403);
+
+
+$chk2 = $pdo->prepare("SELECT COUNT(*) FROM enrollments WHERE course_id = ? AND user_id = ?");
+$chk2->execute([$courseId, $studentId]);
+if ((int)$chk2->fetchColumn() !== 1) json_error("Student not enrolled", 409);
+
+
+$ins = $pdo->prepare("
+  INSERT INTO teacher_messages (teacher_id, student_id, course_id, message, created_at)
+  VALUES (?, ?, ?, ?, NOW())
+");
+$ins->execute([$teacherId, $studentId, $courseId, $msg]);
+
+json_ok(["ok" => true, "message" => "Sent"]);
+
+students.php
+<?php
+declare(strict_types=1);
+
+session_start();
+if (empty($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'teacher') {
+  http_response_code(401);
+  header('Content-Type: application/json; charset=utf-8'); // [web:470]
+  echo json_encode(['ok' => false, 'error' => 'Unauthorized']);
+  exit;
+}
+
+require __DIR__ . '/../_lib/json.php';
+require __DIR__ . '/../../config/db.php';
+
+$teacherId = (int)$_SESSION['user_id'];
+$courseId = isset($_GET['course_id']) ? (int)$_GET['course_id'] : 0;
+if ($courseId <= 0) json_error('course_id is required', 400);
+
+
+$chk = $pdo->prepare("SELECT id, title, total_lessons FROM courses WHERE id = ? AND instructor_id = ? LIMIT 1");
+$chk->execute([$courseId, $teacherId]);
+$course = $chk->fetch(PDO::FETCH_ASSOC);
+if (!$course) json_error('Not allowed', 403);
+
+$stmt = $pdo->prepare("
+  SELECT
+    u.id AS student_id,
+    u.name,
+    u.email,
+    COALESCE(p.progress_percent, 0) AS progress_percent,
+    COALESCE(p.lessons_done, 0) AS lessons_done
+  FROM enrollments e
+  JOIN users u ON u.id = e.user_id
+  LEFT JOIN course_progress p
+    ON p.user_id = e.user_id AND p.course_id = e.course_id
+  WHERE e.course_id = ?
+  ORDER BY u.name
+");
+$stmt->execute([$courseId]);
+$students = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+json_ok([
+  'ok' => true,
+  'course' => [
+    'id' => (int)$course['id'],
+    'title' => (string)$course['title'],
+    'total_lessons' => (int)($course['total_lessons'] ?? 0),
+  ],
+  'students' => array_map(static function($s) {
+    return [
+      'student_id' => (int)$s['student_id'],
+      'name' => (string)$s['name'],
+      'email' => (string)$s['email'],
+      'progress_percent' => (float)$s['progress_percent'],
+      'lessons_done' => (int)$s['lessons_done'],
+    ];
+  }, $students),
+]);
+=======================================================
+

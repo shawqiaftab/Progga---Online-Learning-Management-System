@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Course Reviews</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #ffffff;
+    }
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      padding: 0 30px;
+      height: 60px;
+      background: #adca9d;
+      color: #fff;
+      font-size: 18px;
+    }
+    .navbar a {
+      color: white;
+      margin-right: 20px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .logo img {
+      height: 100%;
+      width: auto;
+      object-fit: contain;
+    }
+    .logo {
+      height: 100%;
+      display: flex;
+      align-items: center;
+    }
+    .auth-links {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .auth-links a {
+      color: white;
+      font-weight: bold;
+      text-decoration: none;
+    }
+    .signup-btn {
+      padding: 8px 15px;
+      background: rgb(172, 82, 82);
+      color: #2e6d3f;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+
+    .reviews-container {
+      width: 80%;
+      max-width: 1000px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #e5e5e5;
+    }
+
+    .page-header h1 {
+      color: #333;
+      font-size: 24px;
+      margin: 0;
+    }
+
+    .back-link {
+      color: #2e6d3f;
+      text-decoration: none;
+      font-weight: bold;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .course-selector {
+      margin-bottom: 30px;
+    }
+
+    .course-selector label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #444;
+    }
+
+    .course-selector select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+
+    .summary-stats {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+
+    .rating-card {
+      background: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      flex: 1;
+      min-width: 140px;
+    }
+
+    .rating-value {
+      font-size: 32px;
+      font-weight: bold;
+      color: #2e6d3f;
+      margin: 5px 0;
+    }
+
+    .rating-text {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .rating-bar {
+      height: 6px;
+      background: #e0e0e0;
+      border-radius: 3px;
+      margin: 8px 0;
+      overflow: hidden;
+    }
+
+    .rating-fill {
+      height: 100%;
+      background: #2e6d3f;
+    }
+
+    .reviews-list {
+      margin-top: 20px;
+    }
+
+    .review-card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      background: #fafafa;
+    }
+
+    .review-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .reviewer-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .reviewer-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #adca9d;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .reviewer-name {
+      font-weight: bold;
+      color: #333;
+    }
+
+    .review-date {
+      color: #777;
+      font-size: 13px;
+    }
+
+    .rating-stars {
+      color: #2e6d3f;
+      font-weight: bold;
+    }
+
+    .review-content {
+      color: #444;
+      line-height: 1.6;
+      margin-bottom: 15px;
+    }
+
+    .course-name {
+      font-size: 13px;
+      color: #666;
+      font-style: italic;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 50px;
+      color: #777;
+      border: 1px dashed #ddd;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <div class="logo">
+      <img src="প্রজ্ঞা.png" alt="প্রজ্ঞা Logo">
+    </div>
+    <div style="margin-left: 30px;">
+      <a href="courses.html">Offered Courses</a>
+      <a href="discounts.html">Discounts</a>
+      <a href="mycourses.html">My courses</a>
+    </div>
+    <div class="auth-links">
+      <a href="login.html">Login</a>
+      <a href="signup.html" class="signup-btn">Sign Up</a>
+    </div>
+  </div>
+
+  <div class="reviews-container">
+    <div class="page-header">
+      <h1>Course Reviews</h1>
+      <a href="teacher-dashboard.html" class="back-link">← Back to Dashboard</a>
+    </div>
+
+    <div class="course-selector">
+      <label for="course">Select Course</label>
+      <select id="course">
+        <option>Web Development Bootcamp</option>
+        <option>Data Structures & Algorithms</option>
+        <option>Machine Learning Fundamentals</option>
+      </select>
+    </div>
+
+    <!-- Rating Summary -->
+    <div class="summary-stats">
+      <div class="rating-card">
+        <div class="rating-text">Overall Rating</div>
+        <div class="rating-value">4.7 ★</div>
+        <div class="rating-text">24 reviews</div>
+      </div>
+      <div class="rating-card">
+        <div class="rating-text">Content Quality</div>
+        <div class="rating-value">4.8</div>
+        <div class="rating-bar">
+          <div class="rating-fill" style="width: 96%"></div>
+        </div>
+      </div>
+      <div class="rating-card">
+        <div class="rating-text">Clarity</div>
+        <div class="rating-value">4.6</div>
+        <div class="rating-bar">
+          <div class="rating-fill" style="width: 92%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reviews List -->
+    <div class="reviews-list">
+      <!-- Review 1 -->
+      <div class="review-card">
+        <div class="review-header">
+          <div class="reviewer-info">
+            <div class="reviewer-avatar">AR</div>
+            <div>
+              <div class="reviewer-name">Ahmed Rahman</div>
+              <div class="review-date">June 18, 2025</div>
+            </div>
+          </div>
+          <div class="rating-stars">★★★★★</div>
+        </div>
+        <div class="review-content">
+          This course completely transformed my understanding of web development. The projects were practical and the explanations were crystal clear. Highly recommended!
+        </div>
+        <div class="course-name">Course: Web Development Bootcamp</div>
+      </div>
+
+      <!-- Review 2 -->
+      <div class="review-card">
+        <div class="review-header">
+          <div class="reviewer-info">
+            <div class="reviewer-avatar">FS</div>
+            <div>
+              <div class="reviewer-name">Faria Sultana</div>
+              <div class="review-date">June 15, 2025</div>
+            </div>
+          </div>
+          <div class="rating-stars">★★★★☆</div>
+        </div>
+        <div class="review-content">
+          Great content overall! The section on responsive design was especially helpful. Would love to see more advanced CSS topics in a follow-up course.
+        </div>
+        <div class="course-name">Course: Web Development Bootcamp</div>
+      </div>
+
+      <!-- Review 3 -->
+      <div class="review-card">
+        <div class="review-header">
+          <div class="reviewer-info">
+            <div class="reviewer-avatar">ZR</div>
+            <div>
+              <div class="reviewer-name">Zara Rahman</div>
+              <div class="review-date">June 10, 2025</div>
+            </div>
+          </div>
+          <div class="rating-stars">★★★★★</div>
+        </div>
+        <div class="review-content">
+          As a beginner, I was nervous about starting web dev, but this course made it so approachable. The instructor is patient and thorough. Thank you!
+        </div>
+        <div class="course-name">Course: Web Development Bootcamp</div>
+      </div>
+    </div>
+
+    <!-- Empty state example (uncomment if no reviews) -->
+    <!--
+    <div class="empty-state">
+      <h3>No reviews yet</h3>
+      <p>Students will be able to leave reviews after completing your course.</p>
+    </div>
+    -->
+  </div>
+
+  <script>
+    // Course selector (could load reviews dynamically)
+    document.getElementById('course').addEventListener('change', function() {
+      alert(`Loading reviews for: ${this.value}`);
+      // In real app: fetch reviews for selected course
+    });
+  </script>
+</body>
+</html>

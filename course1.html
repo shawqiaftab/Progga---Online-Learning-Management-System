@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Web Development</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #ffffff;
+    }
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      padding: 0 30px;
+      height: 60px;
+      background: #adca9d;
+      color: #fff;
+      font-size: 18px;
+    }
+    .navbar a {
+      color: white;
+      margin-right: 20px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .logo img {
+      height: 100%;
+      width: auto;
+      object-fit: contain;
+    }
+    .logo {
+      height: 100%;
+      display: flex;
+      align-items: center;
+    }
+    .auth-links {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .auth-links a {
+      color: white;
+      font-weight: bold;
+      text-decoration: none;
+    }
+    .signup-btn {
+      padding: 8px 15px;
+      background: rgb(172, 82, 82);
+      color: #2e6d3f;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+
+    .course-container {
+      width: 50%;
+      margin: 40px auto;
+    }
+
+    .course-image {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .course-title {
+      font-size: 26px;
+      margin-bottom: 12px;
+      color: #333;
+    }
+
+    .course-meta {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 15px;
+    }
+
+    .course-description {
+      font-size: 16px;
+      line-height: 1.6;
+      color: #444;
+      margin-bottom: 25px;
+    }
+
+    .course-content h3 {
+      font-size: 18px;
+      margin: 20px 0 10px;
+      color: #2e6d3f;
+    }
+
+    .course-content ul {
+      padding-left: 20px;
+      margin-bottom: 25px;
+      color: #555;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+    }
+
+    .action-btn {
+      padding: 8px 16px;
+      background: #f0f0f0;
+      color: #333;
+      text-decoration: none;
+      font-size: 14px;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+
+    .action-btn:hover {
+      background: #e0e0e0;
+    }
+
+    .report-link {
+      color: #be723f;
+      text-decoration: underline;
+      font-size: 14px;
+      margin-left: auto;
+      align-self: center;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <div class="logo">
+      <img src="প্রজ্ঞা.png" alt="প্রজ্ঞা Logo">
+    </div>
+    <div style="margin-left: 30px;">
+      <a href="courses.html">Offered Courses</a>
+      <a href="discounts.html">Discounts</a>
+      <a href="mycourses.html">My courses</a>
+    </div>
+    <div class="auth-links">
+      <a href="login.html">Login</a>
+      <a href="signup.html" class="signup-btn">Sign Up</a>
+    </div>
+  </div>
+
+  <div class="course-container">
+    <img src="https://via.placeholder.com/600x200/e0e0e0/000000?text=Web+Development+Course" alt="Web Development Course" class="course-image">
+
+    <h1 class="course-title">Web Development Fundamentals</h1>
+
+    <div class="course-meta">
+      By Instructor Name • 8 Weeks • 24 Lessons • Intermediate
+    </div>
+
+    <div class="course-description">
+      This course takes you from beginner to confident web developer. You'll learn modern HTML5, CSS3, and JavaScript through hands-on projects. By the end, you'll build a responsive portfolio website, a task manager app, and deploy real sites using GitHub Pages.
+    </div>
+
+    <div class="course-content">
+      <h3>What You'll Learn</h3>
+      <ul>
+        <li>Semantic HTML and accessibility best practices</li>
+        <li>Flexbox, Grid, and responsive design</li>
+        <li>DOM manipulation and event handling</li>
+        <li>Local storage and form validation</li>
+        <li>Deployment and version control with Git</li>
+      </ul>
+    </div>
+        <!-- Student Reviews Section -->
+    <div style="margin: 30px 0; padding-top: 20px; border-top: 1px solid #eee;">
+      <h3 style="color: #2e6d3f; margin-bottom: 15px;">Student Reviews</h3>
+      
+      <!-- Rating Summary -->
+      <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+        <div style="font-size: 28px; font-weight: bold; color: #2e6d3f;">4.7 ★</div>
+        <div>
+          <div style="color: #555; margin-bottom: 4px;">24 ratings • 18 reviews</div>
+          <div style="display: flex; gap: 2px;">
+            <!-- Star icons -->
+            <span style="color: #2e6d3f;">★</span>
+            <span style="color: #2e6d3f;">★</span>
+            <span style="color: #2e6d3f;">★</span>
+            <span style="color: #2e6d3f;">★</span>
+            <span style="color: #ccc;">★</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sample Reviews -->
+      <div style="margin-top: 20px;">
+        <!-- Review 1 -->
+        <div style="background: #fafafa; padding: 15px; border-radius: 8px; margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+            <strong>Ahmed R.</strong>
+            <span style="color: #2e6d3f;">★★★★★</span>
+          </div>
+          <p style="margin: 0; font-size: 14px; color: #444;">
+            This course completely changed how I approach web development. The projects are practical and the explanations are crystal clear!
+          </p>
+        </div>
+
+        <!-- Review 2 -->
+        <div style="background: #fafafa; padding: 15px; border-radius: 8px; margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+            <strong>Faria S.</strong>
+            <span style="color: #2e6d3f;">★★★★☆</span>
+          </div>
+          <p style="margin: 0; font-size: 14px; color: #444;">
+            Great content! The CSS section was especially helpful. Would love more advanced JavaScript topics in a follow-up.
+          </p>
+        </div>
+      </div>
+
+      <!-- Show All Reviews Link -->
+      <a href="reviews.html" style="display: inline-block; margin-top: 15px; color: #2e6d3f; text-decoration: underline; font-weight: bold; font-size: 14px;">
+        View all 18 reviews →
+      </a>
+    </div>
+    <div class="action-buttons">
+      <a href="exam-portal.html" class="action-btn">Give Exams</a>
+      <a href="blog-write.html" class="action-btn">Write Blog</a>
+      <a href="results.html" class="action-btn">View Results</a>
+      <a href="review-form.html" class="action-btn">Leave Review</a>
+      <span class="report-link" onclick="window.location='mailto:support@mahorobakotoba.com?subject=Report%20Issue%20-%20Web%20Development'">Report</span>
+    </div>
+  </div>
+</body>
+</html>

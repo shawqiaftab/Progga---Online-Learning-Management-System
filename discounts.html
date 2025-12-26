@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Discount Courses</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #ffffff;
+    }
+    /* Top bar */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      padding: 0 30px;
+      height: 60px;
+      background: #adca9d;
+      color: #fff;
+      font-size: 18px;
+    }
+    .navbar a {
+      color: white;
+      margin-right: 20px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .header-banner {
+      background: url('back1.png') no-repeat center center;
+      background-size: cover;
+      padding: 40px;
+      text-align: center;
+      border-bottom: 2px solid #e5e5e5;
+      color: black;
+    }
+
+    /* Minimal discount badge */
+    .discount-tag {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #e74c3c;
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+      padding: 3px 8px;
+      border-radius: 4px;
+      z-index: 2;
+    }
+
+    .featured-box {
+      margin: 40px auto;
+      width: 50%;
+      box-sizing: border-box;
+      padding: 0;
+      background: none;
+      border: none;
+      text-align: left;
+    }
+
+    .search-tabs-box {
+      width: 50%;
+      margin: 40px auto;
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      background: #fafafa;
+      box-sizing: border-box;
+    }
+
+    .search-tabs-box input[type="text"] {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 16px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    .main-content {
+      width: 50%;
+      margin: 40px auto;
+    }
+
+    .sections {
+      display: flex;
+      margin-top: 40px;
+      gap: 20px;
+    }
+
+    .card {
+      flex: 1;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #ddd;
+      position: relative;
+    }
+
+    .card img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+    }
+
+    .card p {
+      padding: 10px;
+      font-size: 16px;
+    }
+
+    .card-tags {
+      padding: 10px;
+      font-size: 16px;
+    }
+
+    .card-link {
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .filter-btn {
+      background: #be723f;
+      color: white;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 15px;
+      cursor: pointer;
+    }
+
+    .filter-btn:hover {
+      background: #5b4ddb;
+    }
+
+    .search-tags-dropdown {
+      flex: 1;
+      padding: 10px 12px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      background: #a6d1ff;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      box-sizing: border-box;
+    }
+
+    .auth-links {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .auth-links a {
+      color: white;
+      font-weight: bold;
+      text-decoration: none;
+    }
+
+    .signup-btn {
+      padding: 8px 15px;
+      background: rgb(172, 82, 82);
+      color: #2e6d3f;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+
+    .logo img {
+      height: 100%;
+      width: auto;
+      object-fit: contain;
+    }
+
+    .logo {
+      height: 100%;
+      display: flex;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <div class="logo">
+      <img src="প্রজ্ঞা.png" alt="প্রজ্ঞা Logo">
+    </div>
+
+    <div style="margin-left: 30px;">
+      <a href="courses.html">Offered Courses</a>
+      <a href="discounts.html">Discounts</a>
+      <a href="mycourses.html">My courses</a>
+    </div>
+    <div class="auth-links">
+      <a href="login.html">Login</a>
+      <a href="signup.html" class="signup-btn">Sign Up</a>
+    </div>
+  </div>
+
+  <div class="header-banner"></div>
+
+  <div class="featured-box">
+    <h2>Discount Courses for Limited Time</h2>
+    <p>Explore courses available at a special price for a limited time. Take advantage of these offers to enhance your learning without breaking the bank.</p>
+    <p>Not finding your favorite resource in the database? Or, did you notice some outdated information? 
+      <a href="mailto:support@mahorobakotoba.com" style="color: #2e6d3f; text-decoration: underline; font-weight: bold;">Contact us 📩</a>
+    </p>
+  </div>
+
+  <!-- ✅ UPDATED: Filter section with Difficulty -->
+  <div class="search-tabs-box">
+    <input type="text" placeholder="Search resources..." />
+
+    <div style="display: flex; gap: 10px; margin-top: 10px; align-items: center; flex-wrap: wrap;">
+      <button class="filter-btn">Free Courses</button>
+
+      <select class="search-tags-dropdown">
+        <option>All Subjects</option>
+        <option>Math</option>
+        <option>Algorithm</option>
+        <option>English</option>
+        <option>Machine Learning</option>
+        <option>Object Oriented Programming</option>
+      </select>
+
+      <select class="search-tags-dropdown">
+        <option>All Difficulties</option>
+        <option>Beginner</option>
+        <option>Intermediate</option>
+        <option>Advanced</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="sections">
+      <a href="course1.html" class="card-link">
+        <div class="card">
+          <div class="discount-tag">40% OFF</div>
+          <div class="card-title">Web Development</div>
+          <img src="https://via.placeholder.com/300x160" />
+          <div class="card-tags">
+            <div>Build modern websites from scratch</div>
+          </div>
+        </div>
+      </a>
+
+      <a href="course2.html" class="card-link">
+        <div class="card">
+          <div class="discount-tag">30% OFF</div>
+          <div class="card-title">Data Structures</div>
+          <img src="https://via.placeholder.com/300x160" />
+          <div class="card-tags">
+            <div>Master trees, graphs, and algorithms</div>
+          </div>
+        </div>
+      </a>
+
+      <a href="course3.html" class="card-link">
+        <div class="card">
+          <div class="discount-tag">50% OFF</div>
+          <div class="card-title">English Grammar</div>
+          <img src="https://via.placeholder.com/300x160" />
+          <div class="card-tags">
+            <div>Perfect your writing and speaking</div>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <div class="sections">
+      <a href="course4.html" class="card-link">
+        <div class="card">
+          <div class="discount-tag">25% OFF</div>
+          <div class="card-title">Machine Learning</div>
+          <img src="https://via.placeholder.com/300x160" />
+          <div class="card-tags">
+            <div>Intro to AI and predictive models</div>
+          </div>
+        </div>
+      </a>
+
+      <a href="course5.html" class="card-link">
+        <div class="card">
+          <div class="discount-tag">FREE</div>
+          <div class="card-title">OOP in Java</div>
+          <img src="https://via.placeholder.com/300x160" />
+          <div class="card-tags">
+            <div>Classes, inheritance, and design</div>
+          </div>
+        </div>
+      </a>
+
+      <a href="course6.html" class="card-link">
+        <div class="card">
+          <div class="discount-tag">60% OFF</div>
+          <div class="card-title">Competitive Math</div>
+          <img src="https://via.placeholder.com/300x160" />
+          <div class="card-tags">
+            <div>Problem-solving techniques</div>
+          </div>
+        </div>
+      </a>
+    </div>
+  </div>
+</body>
+</html>

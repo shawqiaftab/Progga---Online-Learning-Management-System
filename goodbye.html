@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Goodbye</title>
+  <style>
+    :root {
+      --bg: #adca9d;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #475569;
+      --border: rgba(15, 23, 42, 0.10);
+      --primary: #adca9d;
+      --primaryText: #ffffff;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 600px at 20% 10%, rgba(37, 99, 235, 0.12), transparent 60%),
+        radial-gradient(900px 500px at 90% 20%, rgba(59, 130, 246, 0.10), transparent 55%),
+        var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .card {
+      width: min(680px, 100%);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.10);
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 34px;
+    }
+
+    p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    a.button {
+      display: inline-block;
+      padding: 10px 14px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+    }
+
+    a.button.primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: var(--primaryText);
+    }
+
+    .small {
+      margin-top: 16px;
+      font-size: 13px;
+      color: rgba(71, 85, 105, 0.9);
+    }
+
+    code {
+      background: rgba(15, 23, 42, 0.06);
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="card" role="main">
+    <h1>Goodbye!</h1>
+    <p>You have been logged out. You can safely close this tab, or go back to the website.</p>
+
+    <div class="actions">
+      <a class="button primary" href="/proj/index.php#home">Back to Home</a>
+      <a class="button" href="/proj/login.php">Login again</a>
+    </div>
+
+    <div class="small">
+      If links don’t work, make sure your project base path is <code>/proj/</code>.
+    </div>
+  </main>
+</body>
+
+</html>
